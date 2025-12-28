@@ -47,6 +47,7 @@ The loop emphasizes spatial awareness, memory, and efficiency rather than combat
 
 ## Documentation & References
 - Brand color palette: [docs/brand/color-palette.md](docs/brand/color-palette.md)
+- Sprite animation studies: [docs/art/sprite-animations.md](docs/art/sprite-animations.md)
 
 ## Project Status
 The project is in early development; core systems, assets, and mechanics are actively being designed, prototyped, and iterated.
