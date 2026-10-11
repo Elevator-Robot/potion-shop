@@ -1,0 +1,4 @@
+[gd_resource type="SummerNetworkSchema" format=3]
+
+[resource]
+schema_id = &"potion_shop.player.v1"

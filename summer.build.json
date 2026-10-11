@@ -1,0 +1,32 @@
+{
+  "schema": "summer.build.v2",
+  "gameId": "game_potion_shop",
+  "executionMode": "hosted",
+  "targetPlatforms": ["ios", "macos"],
+  "project": { "directory": "." },
+  "server": { "exportPreset": "Potion Shop Authority" },
+  "runtime": {
+    "protocolVersion": "1.0.0",
+    "interfaces": {
+      "multiplayer": 6, "session": 3, "lobby": 3, "presence": 3,
+      "config": 3, "party": 1, "matchSearch": 1
+    },
+    "scenes": ["res://client/main.tscn"],
+    "worldDefinitions": ["world.json"],
+    "queues": [
+      {
+        "name": "potion_shop",
+        "minPlayers": 1,
+        "maxPlayers": 2,
+        "worldDefinition": "potion_shop",
+        "policy": "fifo",
+        "transport": "enet"
+      }
+    ],
+    "tickRate": 60,
+    "config": { "keys": {} },
+    "presence": { "tokens": {} },
+    "lobby": { "fields": {} },
+    "server": { "tier": "small" }
+  }
+}

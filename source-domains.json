@@ -1,0 +1,9 @@
+{
+  "schema": "summer.source-domain-graph.v1",
+  "roots": [
+    { "domain": "shared", "paths": ["project.godot", "network", "world.json", "runtime-manifest.json"] },
+    { "domain": "client", "paths": ["client"] },
+    { "domain": "authority_engine", "paths": ["authority"] }
+  ],
+  "dependencies": []
+}

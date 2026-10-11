@@ -1,0 +1,249 @@
+[gd_scene format=3 uid="uid://6ea1ynud5vu1"]
+
+[ext_resource type="Script" uid="uid://cwflo3c2r2aj2" path="res://client/main.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://2dlsg0080io5" path="res://client/queue_view.gd" id="2_queue"]
+[ext_resource type="PackedScene" path="res://client/hud.tscn" id="3_hud"]
+
+[sub_resource type="RectangleShape2D" id="Shape_wall_h"]
+size = Vector2(672, 16)
+
+[sub_resource type="RectangleShape2D" id="Shape_wall_v"]
+size = Vector2(16, 420)
+
+[sub_resource type="RectangleShape2D" id="Shape_shelves"]
+size = Vector2(48, 220)
+
+[sub_resource type="RectangleShape2D" id="Shape_storage"]
+size = Vector2(140, 72)
+
+[sub_resource type="RectangleShape2D" id="Shape_prep"]
+size = Vector2(180, 80)
+
+[sub_resource type="RectangleShape2D" id="Shape_cauldron"]
+size = Vector2(170, 90)
+
+[sub_resource type="RectangleShape2D" id="Shape_bottling"]
+size = Vector2(88, 180)
+
+[sub_resource type="RectangleShape2D" id="Shape_serving"]
+size = Vector2(200, 60)
+
+[node name="Main" type="Node2D" unique_id=1166869466]
+script = ExtResource("1_main")
+
+[node name="Room" type="Node2D" parent="." unique_id=160729834]
+
+[node name="WallFrame" type="Polygon2D" parent="Room" unique_id=1715900808]
+color = Color(0.26, 0.19, 0.14, 1)
+polygon = PackedVector2Array(-16, -16, 656, -16, 656, 436, -16, 436)
+
+[node name="Floor" type="Polygon2D" parent="Room" unique_id=680348848]
+color = Color(0.48, 0.35, 0.25, 1)
+polygon = PackedVector2Array(0, 0, 640, 0, 640, 420, 0, 420)
+
+[node name="FloorPlankA" type="Polygon2D" parent="Room" unique_id=287515356]
+color = Color(0.44, 0.32, 0.23, 1)
+polygon = PackedVector2Array(0, 118, 640, 118, 640, 122, 0, 122)
+
+[node name="FloorPlankB" type="Polygon2D" parent="Room" unique_id=1104577865]
+color = Color(0.44, 0.32, 0.23, 1)
+polygon = PackedVector2Array(0, 278, 640, 278, 640, 282, 0, 282)
+
+[node name="Walls" type="StaticBody2D" parent="Room" unique_id=1933698739]
+
+[node name="TopWall" type="CollisionShape2D" parent="Room/Walls" unique_id=1649820419]
+position = Vector2(320, -8)
+shape = SubResource("Shape_wall_h")
+
+[node name="BottomWall" type="CollisionShape2D" parent="Room/Walls" unique_id=458527038]
+position = Vector2(320, 428)
+shape = SubResource("Shape_wall_h")
+
+[node name="LeftWall" type="CollisionShape2D" parent="Room/Walls" unique_id=694427502]
+position = Vector2(-8, 210)
+shape = SubResource("Shape_wall_v")
+
+[node name="RightWall" type="CollisionShape2D" parent="Room/Walls" unique_id=499908712]
+position = Vector2(648, 210)
+shape = SubResource("Shape_wall_v")
+
+[node name="Stations" type="Node2D" parent="Room" unique_id=2054797199]
+
+[node name="IngredientShelves" type="StaticBody2D" parent="Room/Stations" unique_id=1656082931]
+position = Vector2(28, 170)
+
+[node name="Body" type="Polygon2D" parent="Room/Stations/IngredientShelves" unique_id=1573886526]
+color = Color(0.6, 0.45, 0.28, 1)
+polygon = PackedVector2Array(-24, -110, 24, -110, 24, 110, -24, 110)
+
+[node name="Shape" type="CollisionShape2D" parent="Room/Stations/IngredientShelves" unique_id=449892690]
+shape = SubResource("Shape_shelves")
+
+[node name="Label" type="Label" parent="Room/Stations/IngredientShelves" unique_id=298100359]
+offset_left = -60.0
+offset_top = -8.0
+offset_right = 60.0
+offset_bottom = 8.0
+rotation = -1.5707964
+pivot_offset = Vector2(60, 8)
+theme_override_font_sizes/font_size = 12
+text = "Ingredient Shelves"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Storage" type="StaticBody2D" parent="Room/Stations" unique_id=1637610426]
+position = Vector2(110, 370)
+
+[node name="Body" type="Polygon2D" parent="Room/Stations/Storage" unique_id=1389521067]
+color = Color(0.45, 0.38, 0.3, 1)
+polygon = PackedVector2Array(-70, -36, 70, -36, 70, 36, -70, 36)
+
+[node name="Shape" type="CollisionShape2D" parent="Room/Stations/Storage" unique_id=2009751571]
+shape = SubResource("Shape_storage")
+
+[node name="Label" type="Label" parent="Room/Stations/Storage" unique_id=502504833]
+offset_left = -70.0
+offset_top = -8.0
+offset_right = 70.0
+offset_bottom = 8.0
+theme_override_font_sizes/font_size = 13
+text = "Storage"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PrepStation" type="StaticBody2D" parent="Room/Stations" unique_id=1251795552]
+position = Vector2(200, 60)
+
+[node name="Body" type="Polygon2D" parent="Room/Stations/PrepStation" unique_id=2062285035]
+color = Color(0.64, 0.56, 0.42, 1)
+polygon = PackedVector2Array(-90, -40, 90, -40, 90, 40, -90, 40)
+
+[node name="Shape" type="CollisionShape2D" parent="Room/Stations/PrepStation" unique_id=1936434982]
+shape = SubResource("Shape_prep")
+
+[node name="Label" type="Label" parent="Room/Stations/PrepStation" unique_id=639523216]
+offset_left = -90.0
+offset_top = -8.0
+offset_right = 90.0
+offset_bottom = 8.0
+theme_override_font_sizes/font_size = 13
+text = "Prep Station"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CauldronStation" type="StaticBody2D" parent="Room/Stations" unique_id=1461065929]
+position = Vector2(450, 62)
+
+[node name="Body" type="Polygon2D" parent="Room/Stations/CauldronStation" unique_id=1274886727]
+color = Color(0.3, 0.35, 0.42, 1)
+polygon = PackedVector2Array(-85, -45, 85, -45, 85, 45, -85, 45)
+
+[node name="Brume" type="Polygon2D" parent="Room/Stations/CauldronStation" unique_id=578683065]
+color = Color(0.36, 0.62, 0.45, 1)
+polygon = PackedVector2Array(-45, -18, 45, -18, 45, 18, -45, 18)
+
+[node name="Shape" type="CollisionShape2D" parent="Room/Stations/CauldronStation" unique_id=599406505]
+shape = SubResource("Shape_cauldron")
+
+[node name="Label" type="Label" parent="Room/Stations/CauldronStation" unique_id=579467909]
+offset_left = -85.0
+offset_top = -8.0
+offset_right = 85.0
+offset_bottom = 8.0
+theme_override_font_sizes/font_size = 13
+text = "Cauldron Station"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PotLabel" type="Label" parent="Room/Stations/CauldronStation" unique_id=76997141]
+offset_left = -110.0
+offset_top = 70.0
+offset_right = 110.0
+offset_bottom = 90.0
+theme_override_colors/font_color = Color(0.85, 0.95, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "Cauldron: empty"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BottlingStation" type="StaticBody2D" parent="Room/Stations" unique_id=1789242412]
+position = Vector2(588, 220)
+
+[node name="Body" type="Polygon2D" parent="Room/Stations/BottlingStation" unique_id=1961117794]
+color = Color(0.35, 0.45, 0.5, 1)
+polygon = PackedVector2Array(-44, -90, 44, -90, 44, 90, -44, 90)
+
+[node name="Shape" type="CollisionShape2D" parent="Room/Stations/BottlingStation" unique_id=1950039218]
+shape = SubResource("Shape_bottling")
+
+[node name="Label" type="Label" parent="Room/Stations/BottlingStation" unique_id=2072573253]
+offset_left = -60.0
+offset_top = -8.0
+offset_right = 60.0
+offset_bottom = 8.0
+rotation = -1.5707964
+pivot_offset = Vector2(60, 8)
+theme_override_font_sizes/font_size = 12
+text = "Bottling Station"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ServingCounter" type="StaticBody2D" parent="Room/Stations" unique_id=886830920]
+position = Vector2(400, 380)
+
+[node name="Body" type="Polygon2D" parent="Room/Stations/ServingCounter" unique_id=1389263315]
+color = Color(0.52, 0.36, 0.26, 1)
+polygon = PackedVector2Array(-100, -30, 100, -30, 100, 30, -100, 30)
+
+[node name="Shape" type="CollisionShape2D" parent="Room/Stations/ServingCounter" unique_id=2081986028]
+shape = SubResource("Shape_serving")
+
+[node name="Label" type="Label" parent="Room/Stations/ServingCounter" unique_id=1486297390]
+offset_left = -100.0
+offset_top = -8.0
+offset_right = 100.0
+offset_bottom = 8.0
+theme_override_font_sizes/font_size = 13
+text = "Serving Counter"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Queue" type="Node2D" parent="Room" unique_id=1625692541]
+
+[node name="QueueArea" type="Polygon2D" parent="Room/Queue" unique_id=961180800]
+color = Color(0.22, 0.2, 0.18, 1)
+polygon = PackedVector2Array(200, 436, 536, 436, 536, 500, 200, 500)
+
+[node name="QueueMark1" type="Polygon2D" parent="Room/Queue" unique_id=1589674322]
+color = Color(0.31, 0.28, 0.25, 1)
+polygon = PackedVector2Array(378, 468, 422, 468, 422, 472, 378, 472)
+
+[node name="QueueMark2" type="Polygon2D" parent="Room/Queue" unique_id=80548866]
+color = Color(0.31, 0.28, 0.25, 1)
+polygon = PackedVector2Array(322, 468, 366, 468, 366, 472, 322, 472)
+
+[node name="QueueMark3" type="Polygon2D" parent="Room/Queue" unique_id=1562813903]
+color = Color(0.31, 0.28, 0.25, 1)
+polygon = PackedVector2Array(266, 468, 310, 468, 310, 472, 266, 472)
+
+[node name="QueueMark4" type="Polygon2D" parent="Room/Queue" unique_id=115228452]
+color = Color(0.31, 0.28, 0.25, 1)
+polygon = PackedVector2Array(210, 468, 254, 468, 254, 472, 210, 472)
+
+[node name="QueueLabel" type="Label" parent="Room/Queue" unique_id=881154702]
+offset_left = 200.0
+offset_top = 480.0
+offset_right = 536.0
+offset_bottom = 500.0
+theme_override_font_sizes/font_size = 12
+text = "Customer Queue"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Customers" type="Node2D" parent="Room/Queue" unique_id=1712907801]
+script = ExtResource("2_queue")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=934267019]
+position = Vector2(320, 242)
+
+[node name="HUD" parent="." unique_id=1065442583 instance=ExtResource("3_hud")]

@@ -1,0 +1,78 @@
+[gd_resource type="SummerNetworkComposition" format=3 uid="uid://uxperf1j377h"]
+
+[sub_resource type="SummerNetworkField" id="CommandBytes"]
+field_name = &"b"
+type = 20
+
+[sub_resource type="SummerNetworkSchema" id="CommandSchema"]
+schema_id = &"potion_shop.cmd.v1"
+state_fields = Array[SummerNetworkField]([SubResource("CommandBytes")])
+
+[sub_resource type="SummerNetworkField" id="ResultBytes"]
+field_name = &"b"
+type = 20
+
+[sub_resource type="SummerNetworkSchema" id="ResultSchema"]
+schema_id = &"potion_shop.cmd.result.v1"
+state_fields = Array[SummerNetworkField]([SubResource("ResultBytes")])
+
+[sub_resource type="SummerNetworkOccurrenceStream" id="Commands"]
+command_tick_dispatch = true
+result_schema = SubResource("ResultSchema")
+stream_id = &"potion_shop.cmd"
+command_scope = 2
+payload_schema = SubResource("CommandSchema")
+command_timeout_msec = 8000
+
+[sub_resource type="SummerWorldAudience" id="Everyone"]
+max_expansion = 2
+
+[sub_resource type="SummerNetworkField" id="MotionEntity"]
+field_name = &"entity"
+
+[sub_resource type="SummerNetworkField" id="MotionSeat"]
+field_name = &"seat"
+
+[sub_resource type="SummerNetworkField" id="MotionPosition"]
+field_name = &"position"
+type = 5
+
+[sub_resource type="SummerNetworkField" id="MotionFacing"]
+field_name = &"facing"
+type = 2
+
+[sub_resource type="SummerNetworkSchema" id="MotionSchema"]
+schema_id = &"potion_shop.motion.v1"
+state_fields = Array[SummerNetworkField]([SubResource("MotionEntity"), SubResource("MotionSeat"), SubResource("MotionPosition"), SubResource("MotionFacing")])
+
+[sub_resource type="SummerNetworkStateStream" id="Motion"]
+writer_policy = 1
+skip_writer_echo = true
+stream_id = &"potion_shop.motion"
+state_schema = SubResource("MotionSchema")
+audience_policy = SubResource("Everyone")
+max_keys = 2
+max_state_bytes = 512
+max_total_bytes = 4096
+max_audience_count = 2
+
+[sub_resource type="SummerNetworkField" id="ShopBytes"]
+field_name = &"b"
+type = 20
+
+[sub_resource type="SummerNetworkSchema" id="ShopSchema"]
+schema_id = &"potion_shop.shop.v1"
+state_fields = Array[SummerNetworkField]([SubResource("ShopBytes")])
+
+[sub_resource type="SummerNetworkStateStream" id="Shop"]
+stream_id = &"potion_shop.shop"
+state_schema = SubResource("ShopSchema")
+audience_policy = SubResource("Everyone")
+max_keys = 1
+max_state_bytes = 4096
+max_total_bytes = 8192
+max_audience_count = 2
+
+[resource]
+state_streams = Array[SummerNetworkStateStream]([SubResource("Motion"), SubResource("Shop")])
+occurrence_streams = Array[SummerNetworkOccurrenceStream]([SubResource("Commands")])

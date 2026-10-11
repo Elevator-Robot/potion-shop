@@ -1,0 +1,9 @@
+[gd_resource type="SummerEntityArchetype" load_steps=3 format=3]
+
+[ext_resource type="SummerNetworkSchema" path="res://network/player_schema.tres" id="1_schema"]
+[ext_resource type="PackedScene" path="res://authority/player_model.tscn" id="2_model"]
+
+[resource]
+archetype_id = &"player"
+network_schema = ExtResource("1_schema")
+authority_model_scene = ExtResource("2_model")

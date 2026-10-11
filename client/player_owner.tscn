@@ -1,0 +1,35 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://client/player_owner.gd" id="1_owner"]
+[ext_resource type="Texture2D" path="res://assets/characters/elf.png" id="2_art"]
+
+[sub_resource type="CircleShape2D" id="Shape_body"]
+radius = 10.0
+
+[node name="PlayerOwner" type="CharacterBody2D"]
+script = ExtResource("1_owner")
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+shape = SubResource("Shape_body")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+position = Vector2(0, -16)
+texture_filter = 1
+texture = ExtResource("2_art")
+
+[node name="Held" type="Node2D" parent="."]
+visible = false
+
+[node name="HeldIcon" type="Polygon2D" parent="Held"]
+color = Color(0.48, 0.86, 0.55, 1)
+polygon = PackedVector2Array(-7, 7, 7, 7, 7, -7, -7, -7)
+
+[node name="HeldLabel" type="Label" parent="Held"]
+offset_left = -36.0
+offset_top = -32.0
+offset_right = 36.0
+offset_bottom = -20.0
+theme_override_font_sizes/font_size = 10
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
