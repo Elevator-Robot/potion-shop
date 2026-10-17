@@ -1,5 +1,10 @@
 # Empty ingredient-library furniture
 
+This is the earlier library-case set. The active eccentric shelving now lives in
+`assets/cottage/`; world stock is hidden in favor of timed hints and search UI.
+These frames remain reusable reference assets. The cauldron generator and loose
+book artwork from this pipeline are still used.
+
 These nine original wood designs are **completely empty furniture art**. No
 ingredient, potion, jar, plant, book or container is baked into a shelf texture.
 Posts, boards, drawers, hardware, feet and contact shadows are furniture only.

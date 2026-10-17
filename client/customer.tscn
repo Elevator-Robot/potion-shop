@@ -1,12 +1,21 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://client/customer.gd" id="1_customer"]
 [ext_resource type="Texture2D" path="res://assets/customers/cozy/elf_fantasy.png" id="2_sprite"]
 [ext_resource type="Script" path="res://client/item_icon.gd" id="3_bottle"]
-[ext_resource type="Texture2D" path="res://assets/ui/order_bubble.svg" id="4_bubble"]
+[ext_resource type="Texture2D" path="res://assets/atmosphere/thought.png" id="4_bubble"]
+
+[sub_resource type="CircleShape2D" id="Feet"]
+radius = 9.0
 
 [node name="Customer" type="Node2D"]
 script = ExtResource("1_customer")
+
+[node name="Body" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+[node name="Feet" type="CollisionShape2D" parent="Body"]
+shape = SubResource("Feet")
 
 [node name="Shadow" type="Polygon2D" parent="."]
 color = Color(0.03, 0.04, 0.05, 0.45)
@@ -26,6 +35,7 @@ z_index = 8
 position = Vector2(0, -84)
 texture_filter = 1
 texture = ExtResource("4_bubble")
+hframes = 4
 
 [node name="OrderIcon" type="Sprite2D" parent="."]
 z_index = 8

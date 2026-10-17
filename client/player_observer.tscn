@@ -1,11 +1,20 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://client/player_observer.gd" id="1_observer"]
 [ext_resource type="Texture2D" path="res://assets/characters/blue_witch/sheet.png" id="2_art"]
 [ext_resource type="Script" path="res://client/item_icon.gd" id="3_item"]
 
+[sub_resource type="CircleShape2D" id="Feet"]
+radius = 10.0
+
 [node name="PlayerObserver" type="Node2D"]
 script = ExtResource("1_observer")
+
+[node name="Body" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+[node name="Feet" type="CollisionShape2D" parent="Body"]
+shape = SubResource("Feet")
 
 [node name="Sprite" type="Sprite2D" parent="."]
 position = Vector2(0, -30)

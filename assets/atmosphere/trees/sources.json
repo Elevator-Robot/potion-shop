@@ -1,0 +1,11 @@
+{
+  "authoring": "Original integer-grid pixel drawings; no image sampling or resizing",
+  "generator": "tools/draw_pixel_woods.py",
+  "references": "User concept/exterior folder: mood and gnarled silhouettes only",
+  "frames": "four 128x160 frames per tree; fixed trunks, changing branch tips, leaf tassels, lantern flame and hollow light",
+  "assets": [
+    "guardian",
+    "willow",
+    "spirit_willow"
+  ]
+}

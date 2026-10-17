@@ -27,6 +27,15 @@ Appearance is independent of seat; both players may choose the same portrait.
 - `authority/shop.gd` owns inventory, browsing customers, recipes, coins, reputation,
   brewing, the entrance door and the day clock. `network/game.gd` holds shared
   rules, furniture positions, collision footprints and browse destinations.
+- `network/cottage_layout.gd` defines the irregular floor outline used by art
+  generation, generated wall segments, bounds checks and path clearance.
+- Each seat has an eight-entry inventory array. `held` selects an owned item ID.
+  Pickup/collection appends; brewing, returning and serving consume one selected
+  copy. Selection does not consume or invent items.
+- Arrival/talk schedules two relevant hints and an unrelated ingredient hint.
+  They appear after 0.8–1.5 seconds, expire 3.2 seconds after emission, and point
+  to actually stocked cabinets. The host replicates item, shelf, ID and expiry;
+  clients do not randomize hints and receive no "decoy" flag.
 - `network/session.gd` transports typed RPC arguments and dictionary snapshots.
   Only authority RPCs can install state or correct a player's pose. Only the host
   applies commands. No client chooses a seat or writes the shop snapshot.
@@ -62,13 +71,17 @@ circle and matching Godot convex collision shapes. Interactions also require a
 clear line to their oriented approach point or customer. This is not a full
 server-side replay of Godot physics or a competitive anti-cheat system.
 
-Shelf stock is local to each cabinet (`shelf_stock[station][item]`); the `shelves`
-dictionary is an aggregate for diagnostics. Item sprites are separate nodes on
-explicit board slots, never painted into furniture. Shelf commands validate the
-selected item's membership and stock at that specific cabinet. Both chests
-access the same storage inventory. Customer navigation avoids furniture and floor
+Shelf stock is local to each cabinet (`shelf_stock[station][item]`); `shelves`
+contains diagnostic totals. Permanent world stock is hidden; search panels and
+transient hints use separate item sprites. Commands validate distance, item
+membership, capacity and stock. There are no chests. Navigation avoids furniture and floor
 clutter, but
-customers do not physically push players or each other. The entry door is the
+customers and players have circular feet-level collision. Customer radius is 9px,
+player radius 10px. The authority sweeps player moves against all other actors;
+customers test steps against actors and furniture, sidestep obstructions and
+emit paired, cooldown-limited bump serials. Remote bodies block local input on
+collision layer 2. Clients animate a small sprite-only recoil without moving
+the collision shape. The entry door is the
 customer transition to the outside; players remain inside the shop scene.
 
 Timers use monotonic wall-clock milliseconds. Headless tests use controlled
@@ -77,6 +90,13 @@ No saves, relay/NAT traversal, matchmaking, reconnect identity, or host migratio
 are implemented. Direct internet connections require appropriate UDP reachability.
 
 ## Checks
+
+Customer conversations are host-owned: nearby eligible pairs stop, face one
+another and alternate speech. Deadline extension counts only the overlap of
+elapsed time with the conversation/grace interval, including delayed ticks.
+Player talk uses the same five-second pause plus two-second grace. Snapshots
+carry speech, timing and paused state; clients freeze bar interpolation while
+paused. Requests return an inline potion ID and sentence fragments to the caller.
 
 `python3 tools/check.py` imports resources, exercises the authority's shop rules,
 loads scenes, and drives solo movement input. `--network` additionally runs a host

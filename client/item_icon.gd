@@ -36,7 +36,7 @@ func set_item(item: String) -> void:
 	modulate = Color.WHITE
 
 func _process(delta: float) -> void:
-	if texture == null:
+	if texture == null or not is_visible_in_tree():
 		return
 	_elapsed = fmod(_elapsed + delta, 1.6)
 	frame = int(_elapsed / 0.4) % 4

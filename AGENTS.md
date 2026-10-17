@@ -17,6 +17,13 @@ The report in `docs/research/` describes the pre-migration project, not current 
 
 ## Project map
 
+Primary atmosphere reference: `/home/aphexlog/Google Drive/Game Dev/Potion Shop/potion-shop/concept`
+(including `exterior/`). Inspect these images before visual redesigns. Aim for
+violet window light, amber candles, layered gnarled woodland, patterned rugs and
+busy witchy furniture. Preserve the reference originals; record derived assets.
+Trees and forest terrain must be newly drawn pixel art, not resized concept
+cutouts. Use `tools/draw_pixel_woods.py` for the current editable pixel sources.
+
 - `project.godot`: stock Godot 4.7 project; Compatibility renderer.
 - `client/menu.tscn`: F5 entry point, solo and host/join controls.
 - `client/main.tscn`: shop scene; F6 starts solo if no session exists.
@@ -24,10 +31,11 @@ The report in `docs/research/` describes the pre-migration project, not current 
 - `network/session.gd`: `Session` autoload; ENet lifecycle, RPCs, state delivery.
 - `network/game.gd`: shared constants, recipes, station geometry, helpers.
 - `network/shop_navigation.gd`: host-side customer paths around shared furniture.
+- `network/cottage_layout.gd`: irregular floor outline shared by art and physics.
 - `client/customer_view.gd`: interpolated roaming customers, not queue slots.
 - `client/shop_prop.gd`: pixel furniture, foot collisions and interaction frames.
 - `client/item_icon.gd`: one canonical animated sprite per ingredient/potion,
-  reused in shelves, hands, recipes and customer bubbles; no item-name UI.
+  reused in hints, search, inventory, hands, recipes and customer bubbles; no item-name UI.
 - `authority/main.gd`: host-owned seat, movement and command validation.
 - `authority/shop.gd`: shop rules and authoritative state.
 - `assets/characters/`: existing character art; reuse it.

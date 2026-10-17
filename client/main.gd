@@ -6,6 +6,7 @@ const PlayerOwner = preload("res://client/player_owner.tscn")
 const PlayerObserver = preload("res://client/player_observer.tscn")
 const HUD = preload("res://client/hud.gd")
 const ItemIcon = preload("res://client/item_icon.gd")
+const EmoteIcon = preload("res://client/emote_icon.gd")
 
 var seat := -1
 var shop := {}
@@ -26,6 +27,9 @@ func _ready() -> void:
 	Session.state_changed.connect(_sync_session)
 	Session.command_finished.connect(_command_finished)
 	Session.failed.connect(_session_failed)
+	hud.take_requested.connect(func(station: String, item: String) -> void: _send(_action("take", station, item, "")))
+	hud.return_requested.connect(func(station: String, item: String) -> void: _send(_action("restock", station, item, "")))
+	hud.selection_requested.connect(func(item: String) -> void: Session.send_command("select", "inventory", item))
 	if not Session.active:
 		Session.solo()
 	_sync_session()
@@ -36,6 +40,8 @@ func _process(_delta: float) -> void:
 	_update_interaction()
 	_update_customers()
 	if Input.is_action_just_pressed("ui_cancel"):
+		if hud.close_panels():
+			return
 		Session.close()
 		get_tree().change_scene_to_file("res://client/menu.tscn")
 
@@ -43,10 +49,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_R:
 		hud.toggle_recipes()
 		get_viewport().set_input_as_handled()
-	elif event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_TAB:
-		var prop := props.get_node_or_null(_lit_station)
-		if prop != null:
-			prop.cycle_selection()
+	elif event is InputEventKey and event.pressed and not event.echo and event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_8:
+		hud.select_inventory_slot(int(event.physical_keycode - KEY_1))
 		get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -79,6 +83,7 @@ func _sync_session() -> void:
 			node = scene.instantiate()
 			node.name = str(peer)
 			entities.add_child(node)
+			node.add_to_group("shop_players")
 		node.apply_pose(pose, created)
 	_install_shop(Session.document)
 
@@ -90,12 +95,19 @@ func _command_finished(result: Dictionary) -> void:
 			if customer != null:
 				customer.emphasize_request(true)
 	else:
+		var dialogue: Dictionary = result.get("value", {})
+		if dialogue.has("dialogue_before"):
+			hud.show_dialogue(dialogue)
+		var shelf := str((result.get("value", {}) as Dictionary).get("shelf", ""))
+		if shelf != "":
+			hud.open_shelf(shelf)
 		var message := str((result.get("value", {}) as Dictionary).get("message", ""))
 		if message != "":
 			hud.flash_message(message)
 
 func _session_failed(message: String) -> void:
 	seat = -1
+	hud.close_panels()
 	hud.set_status(message + " Press Esc for menu.")
 
 func _install_shop(document: Dictionary) -> void:
@@ -103,6 +115,7 @@ func _install_shop(document: Dictionary) -> void:
 		return
 	shop = document
 	_local_at = Time.get_ticks_msec()
+	hud.local_seat = seat
 	hud.set_shop(shop, _local_at)
 	$Environment.apply_shop(shop)
 	for prop in props.get_children():
@@ -128,6 +141,8 @@ func _update_interaction() -> void:
 	var me := _own_player()
 	if me == null:
 		return
+	if hud.shelf_open() and me.global_position.distance_to(Game.station_point(hud._shelf_id)) > Game.INTERACT_RADIUS + 8:
+		hud.close_panels()
 	var action := _nearest_action(me.global_position)
 	var station := str(action.get("station", ""))
 	if station != _lit_station:
@@ -135,7 +150,7 @@ func _update_interaction() -> void:
 		for prop in props.get_children():
 			prop.set_highlighted(prop.prop_id == station)
 		$Environment.highlight_door(station == "door")
-	hud.set_prompt(str(action.get("label", "Match the bottle your customer wants · R: recipes")))
+	hud.set_prompt(str(action.get("label", "Watch the shelf hints · 1–8: bag · R: recipes")))
 	if Input.is_action_just_pressed("interact"):
 		_send(action)
 
@@ -191,23 +206,13 @@ func _action_at(id: String) -> Dictionary:
 	var mine := _held()
 	match data["kind"]:
 		"shelf":
-			var item: String = props.get_node(id).choose_item(get_global_mouse_position(), mine)
-			if mine == item:
-				return _action("restock", id, item, "[E / click] Place your item on the shelf")
-			if mine == "":
-				var stock := int(shop.get("shelf_stock", {}).get(id, {}).get(item, 0))
-				return _action("take", id, item, "Point at a sprite · E / click to take · Tab to cycle · ×%d" % stock)
-		"storage":
-			if mine != "":
-				return _action("put", id, "", "[E / click] Store held item")
-			var stored: Array = shop.get("storage", [])
-			if not stored.is_empty():
-				return _action("take", id, "", "[E / click] Retrieve last stored item")
-			return _action("inspect", id, "", "[E] Open storage chest")
+			if bool(data.get("display", false)) and Game.is_potion(mine):
+				return _action("restock", id, mine, "[E / click] Stock this bottle for later")
+			return _action("inspect", id, "", "[E / click] Search the shelf")
 		"cauldron":
 			var pot: Dictionary = shop.get("cauldron", {})
 			var potion := str(pot.get("potion", ""))
-			if bool(pot.get("ready", false)) and mine == "":
+			if bool(pot.get("ready", false)):
 				return _action("collect", id, "", "[E / click] Collect the finished bottle")
 			if potion != "":
 				var now := Time.get_ticks_msec()
@@ -228,7 +233,8 @@ func _update_customers() -> void:
 	var entries: Array = shop.get("customers", [])
 	var remaining: Array = []
 	for entry in entries:
-		remaining.append(maxf(Game.seconds_left(float(entry.get("deadline_msec", 0)), float(shop.get("now_msec", 0)), _local_at, Time.get_ticks_msec()), 0.0))
+		var visual_now: int = _local_at if bool(entry.get("patience_paused", false)) else Time.get_ticks_msec()
+		remaining.append(maxf(Game.seconds_left(float(entry.get("deadline_msec", 0)), float(shop.get("now_msec", 0)), _local_at, visual_now), 0.0))
 	customers.apply(entries, remaining)
 
 func _play_effect(event: Dictionary) -> void:
@@ -240,6 +246,11 @@ func _play_effect(event: Dictionary) -> void:
 	var item := str(event["item"])
 	var from: Vector2 = event["from"]
 	var to: Vector2 = event["to"]
+	if action in ["take", "collect", "serve"]:
+		var emote := EmoteIcon.new()
+		add_child(emote)
+		emote.position = from + Vector2(28, -48)
+		emote.show_emote(0 if action == "serve" else 3, 1.2, true)
 	if item != "":
 		var start := from - Vector2(0, 78)
 		var end: Vector2 = prop.item_position(item) if prop != null else to - Vector2(0, 65)

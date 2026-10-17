@@ -3,7 +3,7 @@ extends RefCounted
 ## This prevents corners of angled furniture being cut by a clear-endpoint path.
 const Game = preload("res://network/game.gd")
 const WIDTH := 40
-const HEIGHT := 26
+const HEIGHT := 28
 const SPACING := 16.0
 const RADIUS := 12.0
 static var _shared_graph: AStar2D

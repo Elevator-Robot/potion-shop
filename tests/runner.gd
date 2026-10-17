@@ -214,6 +214,7 @@ func _host(port: int, ready_file: String) -> void:
 		while Session.players.size() > 1:
 			await get_tree().process_frame
 		_check(str(Session.document["held"]["1"]) == "", "disconnect clears inventory")
+		_check((Session.document["inventory"]["1"] as Array).is_empty(), "disconnect clears the remote bag as well as its selected item")
 	shop.queue_free()
 	await get_tree().process_frame
 
@@ -257,6 +258,7 @@ func _client(port: int) -> void:
 		await get_tree().process_frame
 	_check(bool(result["ok"]), "remote ingredient pickup accepted")
 	_check(str(Session.document["held"]["1"]) == Game.WATERBLOOM, "client receives authoritative held item")
+	_check((Session.document["inventory"]["1"] as Array).has(Game.WATERBLOOM), "remote inventory contents replicate alongside selected item")
 	_check(int(Session.document["shelves"][Game.WATERBLOOM]) == stock - 1, "client stock converges")
 	_check(int(Session.document["shelf_stock"][Game.shelf_id(Game.WATERBLOOM)][Game.WATERBLOOM]) == local_stock - 1, "specific shelf stack replicates to client")
 	var shop := preload("res://client/main.tscn").instantiate()
@@ -299,7 +301,7 @@ func _interactive_inputs(shop: Node2D) -> void:
 	_key(KEY_W, true)
 	await get_tree().create_timer(0.5).timeout
 	_key(KEY_W, false)
-	_check(player.position.y >= Game.FURNITURE[Game.shelf_id(Game.MOONLEAF)]["at"].y + Game.PLAYER_RADIUS - 0.5, "actual player stops at shelf front instead of walking through sprite")
+	_check(Game.floor_clear(player.position, Game.PLAYER_RADIUS - 0.6) and player.position.y > 115, "actual player stops at angled shelf front instead of walking through sprite")
 	_check(player.position.y < approach.y - 5.0, "player can approach until feet reach collision")
 	_check(Game.floor_clear(player.position, Game.PLAYER_RADIUS - 0.5), "physical body and shared footprint agree")
 	for fixture in [{"id": "moon_island", "key": KEY_W}, {"id": "water_east", "key": KEY_W}, {"id": "fire_east", "key": KEY_W}]:
@@ -315,29 +317,30 @@ func _interactive_inputs(shop: Node2D) -> void:
 		_check(Game.floor_clear(player.position, Game.PLAYER_RADIUS - 0.5), "physical collision follows angled footprint: " + fixture["id"])
 		_check(player.position.distance_to(Session.players[1]["position"]) < 2.0, "collision and authority stay synchronized: " + fixture["id"])
 	for raw in Game.recipe_needs(Game.HEALING_POTION):
-		await _interact_at(Game.shelf_spot(raw), raw)
-		_check(Session.authority.shop.held(0) == raw, "E picks up ingredient from its shelf")
-		await _interact_at(Game.station_point("cauldron"))
-		_check(Session.authority.shop.held(0) == "", "E drops held ingredient into cauldron")
+		await _search_collect(shop, Game.shelf_id(raw), raw)
+		_check(Session.authority.shop.inventory(0).has(raw), "search panel collects an ingredient into inventory")
+	_check(Session.authority.shop.inventory(0).size() == 2, "two ingredients can be carried together")
+	_key(KEY_1, true)
+	await get_tree().process_frame
+	_key(KEY_1, false)
+	_check(Session.authority.shop.held(0) == Game.MOONLEAF, "inventory hotkey selects the first ingredient")
+	await _interact_at(Game.station_point("cauldron"))
+	_check(Session.authority.shop.inventory(0).size() == 1, "adding one ingredient preserves the rest of the bag")
+	await _interact_at(Game.station_point("cauldron"))
+	_check(Session.authority.shop.inventory(0).is_empty(), "second selected ingredient completes the recipe")
 	await get_tree().create_timer(5.2).timeout
 	await _interact_at(Game.station_point("cauldron"))
 	_check(Session.authority.shop.held(0) == Game.HEALING_POTION, "E collects brewed potion from cauldron")
 	await _interact_at(Game.station_point("water_south"))
+	_check(Session.authority.shop.held(0) == "", "display shelf directly accepts the selected bottle")
 	_check(Session.authority.shop.stock_at("water_south", Game.HEALING_POTION) == 1, "crafted bottle can be placed on an empty shelf")
-	visible_bottles = 0
-	for stack in potion_rack._icons:
-		for icon in stack:
-			if icon.visible and icon.modulate.a > 0.5:
-				visible_bottles += 1
-	_check(visible_bottles == 1, "a placed bottle is a separate visible sprite on its shelf board")
 	await _interact_at(Game.station_point("water_south"))
+	await _click_control(shop.hud._shelf_buttons[Game.HEALING_POTION]["button"])
 	_check(Session.authority.shop.held(0) == Game.HEALING_POTION, "bottle can be picked back up from shelf")
-	await _interact_at(Game.station_point("storage_west"))
-	_check(Session.authority.shop.held(0) == "", "E stores potion in chest")
-	await get_tree().create_timer(0.25).timeout
-	_check(shop.get_node("World/Props/storage_west/Sprite").frame > 0, "storage interaction plays drawn lid frames")
-	await _interact_at(Game.station_point("storage_west"))
-	_check(Session.authority.shop.held(0) == Game.HEALING_POTION, "E retrieves potion from chest")
+	shop.hud.close_panels()
+	_check(not shop.has_node("World/Props/storage_west"), "chests are removed from the room")
+	_check(not shop.has_node("Walls"), "old rectangular collision walls are absent")
+	_check(shop.get_node("Environment/GeneratedWalls/Boundary").get_child_count() == Game.Cottage.FLOOR_POINTS.size(), "physics follows every edge of the irregular cottage outline")
 	Session.authority.shop._arrive(Time.get_ticks_msec())
 	var customer: Dictionary = Session.authority.shop.doc["customers"][0]
 	customer["position"] = Vector2(288, 192)
@@ -363,16 +366,8 @@ func _interactive_inputs(shop: Node2D) -> void:
 	await _interact_at(Game.DOOR_POINT)
 	await get_tree().create_timer(0.25).timeout
 	_check(shop.get_node("Environment/Door").frame > 0, "E plays door opening frames")
-	# Aim at a non-default sprite and use a real viewport mouse click to pick it.
-	var station := Game.shelf_id(Game.WATERBLOOM)
-	Session.authority.players[1]["position"] = Game.station_point(station)
-	Session._correct(Session.authority.players[1])
-	Session._publish()
-	await get_tree().process_frame
-	var shelf: Node = shop.get_node("World/Props/" + station)
-	await _click_world(shop, shelf.item_position(Game.WATERBLOOM))
-	_check(Session.authority.shop.held(0) == Game.WATERBLOOM, "click selects the visually pointed-at ingredient rather than the shelf's first item")
-	await _interact_at(Game.station_point(station), Game.WATERBLOOM)
+	await _search_collect(shop, Game.shelf_id(Game.WATERBLOOM), Game.WATERBLOOM)
+	_check(Session.authority.shop.held(0) == Game.WATERBLOOM, "search UI targets a non-default ingredient sprite")
 	_key(KEY_R, true)
 	await get_tree().process_frame
 	_key(KEY_R, false)
@@ -388,9 +383,39 @@ func _interactive_inputs(shop: Node2D) -> void:
 		expected.append(potion)
 		_check(shown == expected, "recipe shows exact reusable ingredient/bottle sprites, without item names")
 	_check(not shop.has_node("Room/Queue") and not shop.has_node("World/Props/prep"), "old queue rectangle and removed stations are absent")
+	shop.hud.close_panels()
+	Session.authority.shop.doc["customers"] = [other]
+	other["position"] = Vector2(248, 200)
+	other["phase"] = "waiting"
+	other["look_until"] = Time.get_ticks_msec() + 20000
+	Session.authority.shop._paths.clear()
+	Session.authority.players[1]["position"] = Vector2(248, 240)
+	Session._correct(Session.authority.players[1])
+	Session._publish()
+	await get_tree().create_timer(1.5).timeout
+	_key(KEY_W, true)
+	await get_tree().create_timer(0.6).timeout
+	_key(KEY_W, false)
+	_check(player.position.y >= 218.4, "real player input stops at customer feet")
 
 func _click_world(shop: Node2D, point: Vector2) -> void:
 	var at := get_viewport().get_screen_transform() * (shop.get_global_transform_with_canvas() * point)
+	await _click_screen(at)
+
+func _click_control(control: Control) -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var at := get_viewport().get_screen_transform() * (control.get_global_transform_with_canvas() * (control.size * 0.5))
+	await _click_screen(at)
+
+func _search_collect(shop: Node2D, station: String, item: String) -> void:
+	await _interact_at(Game.station_point(station))
+	_check(shop.hud.shelf_open(), "E opens nearby shelf discoveries")
+	if shop.hud.shelf_open():
+		await _click_control(shop.hud._shelf_buttons[item]["button"])
+		shop.hud.close_panels()
+
+func _click_screen(at: Vector2) -> void:
 	var motion := InputEventMouseMotion.new()
 	motion.device = InputEvent.DEVICE_ID_MOUSE
 	motion.position = at
