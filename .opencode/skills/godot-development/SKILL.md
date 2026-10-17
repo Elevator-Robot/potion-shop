@@ -21,6 +21,10 @@ description: Implement and debug Potion Shop GDScript, scenes, resources, UI, an
 8. On feedback, use the exact error/stack trace or screenshot. Reproduce what can
    be reproduced, fix the cause, and rerun affected checks.
 
+For artwork or animation changes, load `godot-assets` and follow the canonical
+`docs/game/art-direction.md`. Restart the standalone game after completing game
+changes, following the process-scoping instructions in root `AGENTS.md`.
+
 ## Scene discipline
 
 - Use `.tscn`/`.tres` text edits for this workflow. Preserve resource references
@@ -32,6 +36,17 @@ description: Implement and debug Potion Shop GDScript, scenes, resources, UI, an
   record dimensions, scale, and import choices when they matter.
 
 ## Debugging information to request when needed
+
+Test input through actual key/mouse events and the InputMap/GUI path, not only
+`Input.action_press()` or emitting a button's signal. Use the installed Godot
+version's device constants; Godot 4.7 uses `InputEvent.DEVICE_ID_KEYBOARD` (16)
+and `InputEvent.DEVICE_ID_MOUSE` (32). Device 16 is not a Summer-specific bug.
+Headless GUI tests need viewport-local coordinates (for example,
+`Viewport.push_input(event, true)`), respecting stretch transforms.
+
+If clicks select nodes in the editor, inspect Game panel input/selection mode.
+Also test a standalone game window before concluding the menu code is broken.
+If advice fails, reproduce and verify rather than repeating the same instruction.
 
 Ask for the shortest reproduction, expected versus actual behavior, and the full
 Godot error including script and line. For co-op, identify host/client, addresses,

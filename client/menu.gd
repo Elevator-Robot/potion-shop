@@ -1,7 +1,7 @@
 extends Control
 
 const PORTRAITS := [
-	preload("res://assets/characters/elf_adventurer_preview.tres"),
+	preload("res://assets/characters/blue_witch/preview.tres"),
 	preload("res://assets/characters/purple_shopkeeper/preview.tres"),
 ]
 

@@ -3,9 +3,9 @@
 Potion Shop is a shop-management game where you create and sell potions, serve customers, and keep your magical business running through busy days.
 
 Run the shop solo or team up in two-player co-op. Gather ingredients, brew potions,
-and coordinate orders to keep up with customer demand. Choose your Elf Adventurer or
-Purple Shopkeeper sprite in the menu, then walk around the shop with WASD/arrows.
-The Purple Shopkeeper is selected by default and has eight custom-drawn cozy
+and coordinate orders to keep up with customer demand. Choose Aaron (the blue-clad
+witch) or Renna (the purple-haired shopkeeper), then walk around with WASD/arrows.
+Renna is selected by default and has eight custom-drawn cozy
 pixel-art poses for idle, blinking, and walking.
 
 ## Run in Godot

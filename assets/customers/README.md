@@ -1,5 +1,12 @@
 # Customer sprites
 
+The game now uses the original matching-style drawings in **`cozy/`**. See
+[the cozy cast guide](cozy/README.md) for frame sources, designs and regeneration.
+The earlier CC0 strips below remain available as source/reference assets; they
+are no longer used by the customer scene.
+
+## Earlier imported sprites
+
 Artist: **Robert / 0x72**, DungeonTileset II v1.7 (palette credited to GrafxKid).
 
 - Official source and license statement: https://0x72.itch.io/dungeontileset-ii

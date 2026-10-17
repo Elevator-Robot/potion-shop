@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40" shape-rendering="crispEdges">
+<title>Blue witch — idle_3</title>
+<rect x="9" y="35" width="6" height="4" fill="#392d46"/><rect x="10" y="35" width="4" height="3" fill="#78564e"/><rect x="10" y="35" width="3" height="1" fill="#ac7c61"/>
+<rect x="18" y="35" width="6" height="4" fill="#392d46"/><rect x="19" y="35" width="4" height="3" fill="#78564e"/><rect x="19" y="35" width="3" height="1" fill="#ac7c61"/>
+<rect x="5" y="26" width="5" height="7" fill="#392d46"/><rect x="6" y="26" width="3" height="4" fill="#567a99"/><rect x="6" y="26" width="2" height="1" fill="#83a5b6"/><rect x="6" y="29" width="3" height="1" fill="#3d526e"/><rect x="6" y="30" width="3" height="2" fill="#cf9381"/><rect x="6" y="30" width="2" height="1" fill="#ffdec0"/>
+<rect x="22" y="26" width="5" height="7" fill="#392d46"/><rect x="23" y="26" width="3" height="4" fill="#567a99"/><rect x="23" y="26" width="2" height="1" fill="#83a5b6"/><rect x="23" y="29" width="3" height="1" fill="#3d526e"/><rect x="23" y="30" width="3" height="2" fill="#cf9381"/><rect x="23" y="30" width="2" height="1" fill="#ffdec0"/>
+<g transform="translate(0 0)">
+<path d="M10 25h12v2h2v5h1v4H8v-4H7v-5h3z" fill="#392d46"/>
+<path d="M11 26h10v2h2v4h1v3H9v-3H8v-4h3z" fill="#3d526e"/>
+<path d="M11 27h9v1h2v3h-1v3H10v-3H9v-3h2z" fill="#567a99"/>
+<rect x="10" y="28" width="2" height="3" fill="#83a5b6"/>
+<rect x="10" y="34" width="4" height="1" fill="#83a5b6"/>
+<rect x="17" y="33" width="1" height="2" fill="#83a5b6"/>
+<path d="M11 26h3l2 3 2-3h3l-2 4h-6z" fill="#83a5b6"/>
+<rect x="9" y="31" width="14" height="2" fill="#78564e"/>
+<rect x="14" y="31" width="4" height="2" fill="#e9be73"/>
+<rect x="15" y="31" width="2" height="1" fill="#392d46"/>
+<rect x="20" y="31" width="4" height="4" fill="#392d46"/>
+<rect x="20" y="32" width="3" height="2" fill="#ac7c61"/>
+<rect x="21" y="32" width="1" height="1" fill="#e9be73"/>
+</g>
+<g transform="translate(0 0)"><path d="M8 11h16v2h3v12h-2v4h-5v-2H10v2H5v-3H3v-8h2v-5h3z" fill="#392d46"/><path d="M8 12h15v2h3v10h-3v4h-2v-3H9v3H6v-4H4v-5h2v-5h2z" fill="#684a42"/><rect x="5" y="17" width="3" height="6" fill="#986c50"/><rect x="24" y="17" width="2" height="7" fill="#986c50"/><path d="M10 13h12v2h3v8h-2v2h-3v1h-8v-1H9v-2H7v-8h3z" fill="#cf9381"/><path d="M10 14h12v2h2v7h-2v1h-3v1h-6v-1h-3v-1H8v-7h2z" fill="#f3c5a6"/><path d="M12 15h8v1h3v6h-3v1h-9v-1H9v-5h3z" fill="#ffdec0"/><path d="M7 13h13v2h-4v2h-3v2H9v2H7zM22 13h3v5h-2v-2h-1z" fill="#684a42"/><path d="M8 13h10v1h-3v2h-3v2H9v1H8zM23 14h1v3h-1z" fill="#986c50"/><rect x="10" y="14" width="4" height="1" fill="#c69768"/><rect x="9" y="18" width="4" height="4" fill="#49364e"/><rect x="10" y="21" width="2" height="1" fill="#7194ae"/><rect x="9" y="18" width="2" height="1" fill="#fff0cf"/><rect x="19" y="18" width="4" height="4" fill="#49364e"/><rect x="20" y="21" width="2" height="1" fill="#7194ae"/><rect x="19" y="18" width="2" height="1" fill="#fff0cf"/><rect x="7" y="22" width="4" height="2" fill="#ed9ca5"/><rect x="21" y="22" width="4" height="2" fill="#ed9ca5"/><rect x="15" y="22" width="1" height="1" fill="#cf9381"/><rect x="14" y="24" width="1" height="1" fill="#cf9381"/><rect x="15" y="25" width="2" height="1" fill="#cf9381"/><rect x="17" y="24" width="1" height="1" fill="#cf9381"/><path d="M5 23h2v2h3v2H6v-2H5z" fill="#986c50"/><path d="M24 23h2v4h-2v2h-3v-2h3z" fill="#986c50"/><rect x="6" y="24" width="1" height="3" fill="#c69768"/><rect x="24" y="24" width="1" height="2" fill="#c69768"/><path d="M1 11h5V9h3V6h2V3h3V1h9v2h-3v3h2v4h5v1h4v4h-3v1H4v-1H1z" fill="#392d46"/><path d="M3 12h5v-2h3V7h2V4h3V2h5v1h-3v3h2v4h3v2h6v2h-3v1H6v-1H3z" fill="#493a55"/><path d="M11 10V7h2V4h3V2h3v1h-2v4h2v3z" fill="#64516e"/><path d="M13 7V5h2V3h2v1h-1v3z" fill="#967d9e"/><path d="M4 12h6v-1h12v1h6v1h-5v1H9v-1H4z" fill="#64516e"/><rect x="7" y="12" width="3" height="1" fill="#967d9e"/><rect x="23" y="12" width="4" height="1" fill="#967d9e"/><rect x="10" y="10" width="13" height="2" fill="#3d526e"/><rect x="11" y="10" width="11" height="1" fill="#567a99"/><rect x="10" y="9" width="12" height="1" fill="#e9be73"/><rect x="11" y="9" width="3" height="1" fill="#fff0cf"/></g>
+</svg>

@@ -55,9 +55,9 @@ unique_name_in_owner = true
 layout_mode = 2
 item_count = 2
 selected = 0
-popup/item_0/text = "Elf Adventurer"
+popup/item_0/text = "Aaron"
 popup/item_0/id = 0
-popup/item_1/text = "Purple Shopkeeper"
+popup/item_1/text = "Renna"
 popup/item_1/id = 1
 
 [node name="Address" type="LineEdit" parent="Center/Content"]

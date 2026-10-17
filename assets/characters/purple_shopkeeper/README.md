@@ -1,4 +1,4 @@
-# Cozy purple shopkeeper
+# Renna — cozy purple shopkeeper
 
 Original pixel artwork created for Potion Shop, using the existing
 `../potionmaker.png` character as a design reference. The original image is preserved.

@@ -1,0 +1,10 @@
+[
+  {"name": "moss", "skin": "#91b879", "skin_shadow": "#627f60", "skin_light": "#c5d99a", "blush": "#b5a47c"},
+  {"name": "jade", "skin": "#76b9aa", "skin_shadow": "#4d847d", "skin_light": "#abe0c6", "blush": "#a7b5b5"},
+  {"name": "sky", "skin": "#85b9d4", "skin_shadow": "#5e7fa7", "skin_light": "#b9ddec", "blush": "#b5a7d4"},
+  {"name": "lavender", "skin": "#b29bd2", "skin_shadow": "#806d9f", "skin_light": "#dac5eb", "blush": "#d5a4cb"},
+  {"name": "rose", "skin": "#db9eb3", "skin_shadow": "#a57392", "skin_light": "#f1c5cf", "blush": "#dc839f"},
+  {"name": "ochre", "skin": "#d8b46d", "skin_shadow": "#9e8058", "skin_light": "#f3d89b", "blush": "#d99e7c"},
+  {"name": "umber", "skin": "#a37460", "skin_shadow": "#704e49", "skin_light": "#c99676", "blush": "#b87b78"},
+  {"name": "peach", "skin": "#f3c5a6", "skin_shadow": "#cf9381", "skin_light": "#ffdec0", "blush": "#ed9ca5"}
+]

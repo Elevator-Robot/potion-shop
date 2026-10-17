@@ -96,12 +96,23 @@ func _basic() -> void:
 	var first: Node2D = queue.get_child(0)
 	var second: Node2D = queue.get_child(1)
 	var second_texture: Texture2D = second.get_node("Sprite").texture
+	var second_skin: int = second.skin_palette_index
+	_check(first.skin_palette_index != second_skin, "neighboring customers have varied fantasy skin")
 	_check(first.get_node("Sprite").texture != second_texture, "customers have distinct sprite assets")
 	_check(first.get_node("AngryMark").visible, "angry customer keeps visible feedback")
 	customers.remove_at(0)
 	queue.apply(customers, [8.0])
 	_check(first.get_node("Sprite").texture == second_texture, "appearance follows customer ID after queue shifts")
+	_check(first.skin_palette_index == second_skin, "skin color survives queue reordering")
+	_check(first.get_node("Sprite").modulate == Color.WHITE, "skin is not recolored by whole-body tint")
 	_check(not first.get_node("AngryMark").visible and not second.visible, "reused queue slot clears old anger and hides unused customer")
+	# Every outfit gets every palette, rather than binding a color to a role.
+	for kind in 4:
+		var seen := {}
+		for visit in 8:
+			first.show_customer(1 + kind + visit * 4, Game.HEALING_POTION, 1.0, false)
+			seen[first.skin_palette_index] = true
+		_check(seen.size() == 8, "all fantasy palettes available to outfit %d" % kind)
 	shop.queue_free()
 	await get_tree().process_frame
 	Session.selected_character = 0
@@ -110,16 +121,17 @@ func _basic() -> void:
 	add_child(shop)
 	await get_tree().process_frame
 	player = shop.get_node("Entities/1")
-	var elf: Sprite2D = player.get_node("Sprite")
-	var idle_frame := elf.frame
-	await get_tree().create_timer(0.25).timeout
-	_check(elf.frame < 4 and elf.frame != idle_frame, "elf cycles authored idle frames")
+	var witch: Sprite2D = player.get_node("Sprite")
+	_check(witch.texture.resource_path == "res://assets/characters/blue_witch/sheet.png", "slot zero uses the redrawn original witch")
+	var idle_frame := witch.frame
+	await get_tree().create_timer(1.25).timeout
+	_check(witch.frame < 4 and witch.frame != idle_frame, "blue witch cycles authored idle frames")
 	_key(KEY_D, true)
 	await get_tree().create_timer(0.2).timeout
-	_check(elf.frame >= 4 and elf.frame < 8, "elf uses walking frames during movement")
+	_check(witch.frame >= 4 and witch.frame < 8, "blue witch uses walking frames during movement")
 	_key(KEY_D, false)
 	await get_tree().create_timer(0.3).timeout
-	_check(elf.frame < 4, "elf returns to idle frames after stopping")
+	_check(witch.frame < 4, "blue witch returns to idle frames after stopping")
 	shop.queue_free()
 	await get_tree().process_frame
 
@@ -182,7 +194,7 @@ func _client(port: int) -> void:
 	_check(shop.seat == 1, "client scene owns second seat")
 	var local: Node = shop.get_node("Entities/" + str(multiplayer.get_unique_id()))
 	_check(local.get_node("Sprite").texture.resource_path == "res://assets/characters/purple_shopkeeper/sheet.png", "client uses chosen purple character sheet")
-	_check(shop.get_node("Entities/1/Sprite").texture.resource_path == "res://assets/characters/elf_adventurer.png", "observer uses host elf sheet")
+	_check(shop.get_node("Entities/1/Sprite").texture.resource_path == "res://assets/characters/blue_witch/sheet.png", "observer uses host blue witch sheet")
 	await get_tree().create_timer(0.2).timeout
 	shop.queue_free()
 	await get_tree().process_frame

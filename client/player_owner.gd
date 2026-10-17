@@ -12,7 +12,7 @@ const HELD_ABOVE := Vector2(0.0, -66.0)
 
 ## Authored idle/walk sheets for both selectable characters.
 const CHARACTERS := {
-	0: preload("res://assets/characters/elf_adventurer.png"),
+	0: preload("res://assets/characters/blue_witch/sheet.png"),
 	1: preload("res://assets/characters/purple_shopkeeper/sheet.png"),
 }
 ## Readable character height in world pixels; keep the small feet collision
@@ -77,7 +77,7 @@ func _use_character(seat_number: int) -> void:
 	sprite.hframes = 4
 	sprite.vframes = 2
 	sprite.frame = 0
-	animation.idle_durations = Vector4(1.2, 0.3, 0.12, 0.3) if seat_number == 1 else Vector4(0.2, 0.2, 0.2, 0.2)
+	animation.idle_durations = Vector4(1.2, 0.3, 0.12, 0.3)
 	_face_art()
 
 

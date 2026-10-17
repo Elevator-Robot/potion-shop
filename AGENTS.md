@@ -6,6 +6,9 @@ Use the normal Build agent. The user describes changes here, you edit the projec
 and run relevant checks, then the user plays it in Godot and brings back feedback.
 Load the project `godot-development` skill for gameplay, scene, resource, or engine
 work. No Summer installation, account, MCP server, or custom agent is required.
+For asset creation, redraws, animation or visual polish, also load `godot-assets`
+and read `docs/game/art-direction.md`. Deliver recognizable artwork and inspect
+it in rendered Godot; placeholder geometry and headless tests are not visual proof.
 Do not delegate unless the user explicitly requests it.
 
 Read `docs/game/brief.md` before changing design and `docs/game/architecture.md`
@@ -23,6 +26,8 @@ The report in `docs/research/` describes the pre-migration project, not current 
 - `authority/main.gd`: host-owned seat, movement and command validation.
 - `authority/shop.gd`: shop rules and authoritative state.
 - `assets/characters/`: existing character art; reuse it.
+- `docs/game/art-direction.md`: player identities, visual style and atlas contracts.
+- `tools/draw_*`: reproducible original asset generators; retain editable sources.
 
 ## Rules
 
@@ -46,5 +51,12 @@ Set `GODOT_BIN` if the executable is not named `godot`.
 Headless checks do not prove appearance, sound, or game feel. Report exactly what
 passed and give the user a short F5/F6 playtest checklist for the changed behavior.
 Do not claim to have visually inspected the game without actually viewing it.
+
+After completing game changes and relevant checks, always restart this project's
+standalone game so the user can immediately play the latest version. Stop only
+the game process belonging to this project, leaving the Godot editor and other
+projects alone. Launch `godot --path . --windowed --resolution 1152x864` from the
+project root (or use `GODOT_BIN`). If it is not running, start it. Run it in the
+background and mention the restart in the handoff.
 
 Conventional commits: `type(scope): lowercase imperative description`.
