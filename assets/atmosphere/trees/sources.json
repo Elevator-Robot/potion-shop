@@ -1,0 +1,20 @@
+[
+  {
+    "asset": "guardian",
+    "source": "/home/aphexlog/Google Drive/Game Dev/Potion Shop/potion-shop/concept/exterior/tree1.png",
+    "sha256": "4132586e05d383c662a1345dfce83f83973606c59eed3173e90a74305d0ab6e6",
+    "changes": "trim/resize, canopy-only pixel sway, root alpha feather; guardian ember pulse or spirit hollow glow"
+  },
+  {
+    "asset": "willow",
+    "source": "/home/aphexlog/Google Drive/Game Dev/Potion Shop/potion-shop/concept/exterior/tree6.png",
+    "sha256": "0788fb9ee48a01611f23360e3bacb891c9ef6008b6743450f997f1cd4ff3f625",
+    "changes": "trim/resize, canopy-only pixel sway, root alpha feather; guardian ember pulse or spirit hollow glow"
+  },
+  {
+    "asset": "spirit_willow",
+    "source": "/home/aphexlog/Google Drive/Game Dev/Potion Shop/potion-shop/concept/exterior/tree6.png",
+    "sha256": "0788fb9ee48a01611f23360e3bacb891c9ef6008b6743450f997f1cd4ff3f625",
+    "changes": "trim/resize, canopy-only pixel sway, root alpha feather; guardian ember pulse or spirit hollow glow"
+  }
+]

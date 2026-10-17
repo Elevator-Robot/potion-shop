@@ -1,90 +1,75 @@
-[gd_scene load_steps=11 format=3 uid="uid://6ea1ynud5vu1"]
+[gd_scene format=3 uid="uid://6ea1ynud5vu1"]
 
-[ext_resource type="Script" path="res://client/main.gd" id="1"]
+[ext_resource type="Script" uid="uid://cwflo3c2r2aj2" path="res://client/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://client/shop_environment.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://client/shop_prop.tscn" id="3"]
-[ext_resource type="Script" path="res://client/customer_view.gd" id="4"]
+[ext_resource type="Script" uid="uid://2dlsg0080io5" path="res://client/customer_view.gd" id="4"]
 [ext_resource type="PackedScene" path="res://client/hud.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://client/shop_clutter.tscn" id="6"]
 
-[sub_resource type="RectangleShape2D" id="Top"]
-size = Vector2(280, 16)
-[sub_resource type="RectangleShape2D" id="Bottom"]
-size = Vector2(672, 16)
-[sub_resource type="RectangleShape2D" id="Side"]
-size = Vector2(16, 420)
-[sub_resource type="RectangleShape2D" id="Threshold"]
-size = Vector2(80, 8)
-
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=71642188]
 script = ExtResource("1")
 
-[node name="Environment" parent="." instance=ExtResource("2")]
+[node name="Environment" parent="." unique_id=895210751 instance=ExtResource("2")]
 
-[node name="World" type="Node2D" parent="."]
+[node name="World" type="Node2D" parent="." unique_id=1901507611]
 y_sort_enabled = true
 
-[node name="Props" type="Node2D" parent="World"]
+[node name="Props" type="Node2D" parent="World" unique_id=1810062130]
 y_sort_enabled = true
 
-[node name="moon_west" parent="World/Props" instance=ExtResource("3")]
+[node name="moon_west" parent="World/Props" unique_id=1155706960 instance=ExtResource("3")]
+position = Vector2(112, 144)
 prop_id = "moon_west"
-[node name="fire_north" parent="World/Props" instance=ExtResource("3")]
+
+[node name="fire_north" parent="World/Props" unique_id=620568685 instance=ExtResource("3")]
+position = Vector2(256, 120)
 prop_id = "fire_north"
-[node name="water_east" parent="World/Props" instance=ExtResource("3")]
+
+[node name="water_east" parent="World/Props" unique_id=310589565 instance=ExtResource("3")]
+position = Vector2(656, 152)
 prop_id = "water_east"
-[node name="moon_island" parent="World/Props" instance=ExtResource("3")]
+
+[node name="moon_island" parent="World/Props" unique_id=1590506753 instance=ExtResource("3")]
+position = Vector2(208, 392)
 prop_id = "moon_island"
-[node name="fire_east" parent="World/Props" instance=ExtResource("3")]
+
+[node name="fire_east" parent="World/Props" unique_id=181662042 instance=ExtResource("3")]
+position = Vector2(656, 352)
 prop_id = "fire_east"
-[node name="water_south" parent="World/Props" instance=ExtResource("3")]
+
+[node name="water_south" parent="World/Props" unique_id=1420823833 instance=ExtResource("3")]
+position = Vector2(576, 472)
 prop_id = "water_south"
-[node name="moon_nook" parent="World/Props" instance=ExtResource("3")]
+
+[node name="moon_nook" parent="World/Props" unique_id=789714627 instance=ExtResource("3")]
+position = Vector2(80, 312)
 prop_id = "moon_nook"
-[node name="fire_low" parent="World/Props" instance=ExtResource("3")]
+
+[node name="fire_low" parent="World/Props" unique_id=774750005 instance=ExtResource("3")]
+position = Vector2(96, 472)
 prop_id = "fire_low"
-[node name="water_north" parent="World/Props" instance=ExtResource("3")]
+
+[node name="water_north" parent="World/Props" unique_id=313932532 instance=ExtResource("3")]
+position = Vector2(544, 112)
 prop_id = "water_north"
-[node name="storage_west" parent="World/Props" instance=ExtResource("3")]
-prop_id = "storage_west"
-[node name="storage_south" parent="World/Props" instance=ExtResource("3")]
-prop_id = "storage_south"
-[node name="cauldron" parent="World/Props" instance=ExtResource("3")]
+
+[node name="cauldron" parent="World/Props" unique_id=1651169854 instance=ExtResource("3")]
+position = Vector2(424, 336)
 prop_id = "cauldron"
 
-[node name="Basket" parent="World" instance=ExtResource("6")]
-decor_id = "basket"
-[node name="Books" parent="World" instance=ExtResource("6")]
+[node name="Books" parent="World" unique_id=503550034 instance=ExtResource("6")]
+position = Vector2(288, 448)
 decor_id = "books"
-[node name="Bottles" parent="World" instance=ExtResource("6")]
-decor_id = "bottles"
 
-[node name="Customers" type="Node2D" parent="World"]
+[node name="Customers" type="Node2D" parent="World" unique_id=1482172784]
 y_sort_enabled = true
 script = ExtResource("4")
-[node name="Entities" type="Node2D" parent="World"]
+
+[node name="Entities" type="Node2D" parent="World" unique_id=421447466]
 y_sort_enabled = true
 
-[node name="Walls" type="StaticBody2D" parent="."]
-[node name="TopLeft" type="CollisionShape2D" parent="Walls"]
-position = Vector2(140, -8)
-shape = SubResource("Top")
-[node name="TopRight" type="CollisionShape2D" parent="Walls"]
-position = Vector2(500, -8)
-shape = SubResource("Top")
-[node name="Threshold" type="CollisionShape2D" parent="Walls"]
-position = Vector2(320, 2)
-shape = SubResource("Threshold")
-[node name="Bottom" type="CollisionShape2D" parent="Walls"]
-position = Vector2(320, 428)
-shape = SubResource("Bottom")
-[node name="Left" type="CollisionShape2D" parent="Walls"]
-position = Vector2(-8, 210)
-shape = SubResource("Side")
-[node name="Right" type="CollisionShape2D" parent="Walls"]
-position = Vector2(648, 210)
-shape = SubResource("Side")
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1372727606]
+position = Vector2(400, 228)
 
-[node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(320, 174)
-[node name="HUD" parent="." instance=ExtResource("5")]
+[node name="HUD" parent="." unique_id=777396561 instance=ExtResource("5")]

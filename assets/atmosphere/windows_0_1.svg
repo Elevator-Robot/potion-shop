@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="64" viewBox="0 0 48 64" shape-rendering="crispEdges">
+<path d="M3 62V26l4-12 8-9 9-4 9 4 8 10 4 11v36z" fill="#292336" opacity="1"/>
+<path d="M6 59V26l4-11 7-7 7-4 8 5 6 8 4 10v32z" fill="#68556f" opacity="1"/>
+<path d="M10 55V27l4-9 10-9 10 9 4 9v28z" fill="#5a3b87" opacity="1"/>
+<path d="M13 52V28l4-8 7-6 7 6 4 8v24z" fill="#af83e4" opacity="1"/>
+<rect x="22" y="13" width="4" height="42" fill="#352c4b" opacity="1"/>
+<rect x="10" y="28" width="28" height="3" fill="#352c4b" opacity="1"/>
+<rect x="10" y="40" width="28" height="3" fill="#352c4b" opacity="1"/>
+<rect x="10" y="52" width="28" height="3" fill="#352c4b" opacity="1"/>
+<rect x="15" y="31" width="3" height="2" fill="#dfbbf0" opacity="1"/>
+<rect x="28" y="43" width="3" height="2" fill="#dfbbf0" opacity="1"/>
+<rect x="17" y="22" width="3" height="2" fill="#dfbbf0" opacity="1"/>
+<rect x="2" y="59" width="44" height="4" fill="#4d3c51" opacity="1"/>
+<rect x="4" y="59" width="40" height="1" fill="#a58b8e" opacity="1"/>
+</svg>

@@ -17,20 +17,30 @@ account is needed. F6 on `client/main.tscn` starts a solo shop directly.
 
 - **Move:** WASD or arrow keys.
 - **Interact:** E, Space or left click at the nearby object/customer.
-- **Select shelf item:** point at its sprite, or Tab to cycle.
+- **Search shelves:** E/click opens contents; click a discovery to collect it.
+- **Inventory:** eight-item bag; click a bag icon or press 1–8 to select.
 - **Recipes:** R opens/closes the recipe book.
-- **Leave shop:** Esc.
+- **Close a panel / leave shop:** Esc.
 
-Customers show the bottle they want in a large visual bubble. Match its shape
-and color to the recipe book: six distinctive potions use twelve animated
-ingredients. Pick an ingredient sprite from a library shelf, add it to the
-cauldron, collect the finished bottle, and bring the matching bottle to a customer.
-Talk to customers to pause them briefly and emphasize their visual request.
+The shop is an irregular woodland cottage with tall crooked shelves and rustic
+walls. Customer requests show the bottle they want. Shortly afterward, ingredients
+briefly pop over stocked shelves—including a distraction ingredient. Search to
+inspect the real contents, collect what you want, and match pairs in the visual
+recipe book. Any recipe can be brewed from your bag, even without a matching
+customer request. Talking to a customer pauses them and repeats their hints.
 
-Assigned items can be returned to shelves; finished bottles can be stacked on
-the empty potion racks. Every shelf's stock is independent. Chests store and retrieve items
-from the shared storage supply. Doors, lids, jars, potions and brewing have visible
-interaction animations. There is no prep table, bottling station or service counter.
+The current concept-led pass tightens the room, adds angled decorated shelves,
+violet windows, rugs, animated trees and mushrooms. Customer orders appear in
+occasional thoughts; talk to hear a short request with the potion sprite inline.
+Both player conversations and customer chats pause patience for five seconds
+plus a two-second grace period. Day one starts with one customer at a time.
+The two entrance racks display crafted potions stored for future orders.
+
+Select ingredients in your bag to add them to the cauldron. Collect/select the
+finished bottle before serving. Clicking the selected bag icon puts it away.
+Assigned items can be returned through a shelf's search panel. Every shelf's
+stock is independent. Chests are removed. Requests, hints, discoveries and
+service have animated bubbles, sparkles and cute emotes.
 
 For co-op on one machine, run two instances: host in one, join `127.0.0.1` in the
 other. On a LAN, join the host's LAN IP. Both use UDP port **24567** by default;

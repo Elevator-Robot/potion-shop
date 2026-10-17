@@ -71,6 +71,9 @@ func command(peer: int, id: int, action: String, station: String, item: String) 
 
 
 func _apply(peer: int, action: String, station: String, item: String) -> Dictionary:
+	var seat := int(players[peer]["seat"])
+	if station == "inventory" and action == "select":
+		return shop.select_item(seat, item)
 	var point: Variant = null
 	if station == "door" and action == "door":
 		point = Game.DOOR_POINT
@@ -85,8 +88,7 @@ func _apply(peer: int, action: String, station: String, item: String) -> Diction
 			"shelf":
 				if action in ["take", "restock"] and Game.shelf_items(station).has(item):
 					point = Game.station_point(station)
-			"storage":
-				if action in ["take", "put", "inspect"] and item == "":
+				elif action == "inspect" and item == "":
 					point = Game.station_point(station)
 			"cauldron":
 				if action in ["add", "collect", "clear", "inspect"]:
@@ -98,11 +100,9 @@ func _apply(peer: int, action: String, station: String, item: String) -> Diction
 		return _no("too_far")
 	if not Game.motion_clear(position, point, 1.0):
 		return _no("blocked")
-	var seat := int(players[peer]["seat"])
 	var outcome := _no("unknown_command")
 	match action:
 		"take": outcome = shop.take(seat, item, station)
-		"put": outcome = shop.put(seat)
 		"restock": outcome = shop.restock(seat, item, station)
 		"add": outcome = shop.add(seat)
 		"collect": outcome = shop.collect(seat)
@@ -110,7 +110,7 @@ func _apply(peer: int, action: String, station: String, item: String) -> Diction
 		"serve": outcome = shop.serve(seat, int(item))
 		"talk": outcome = shop.talk(int(item), position)
 		"door": outcome = shop.door()
-		"inspect": outcome = {"ok": true, "reason": "", "value": {"message": "Press R to read the recipes" if station == "cauldron" else "An empty chest — bring an ingredient or potion to store"}}
+		"inspect": outcome = {"ok": true, "reason": "", "value": {"message": "Press R to read the recipes"} if station == "cauldron" else {"shelf": station}}
 	if bool(outcome["ok"]):
 		shop.record_effect(action, station, seat, position, point, outcome["value"])
 	return outcome

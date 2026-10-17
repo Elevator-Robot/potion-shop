@@ -2,6 +2,22 @@
 
 ## Visual target
 
+Primary user-supplied concept folder:
+`/home/aphexlog/Google Drive/Game Dev/Potion Shop/potion-shop/concept`, including
+`exterior/`. Inspect the actual references for future artwork. The active
+`assets/atmosphere/` pass uses violet windows, plum floors, patterned rugs, angled
+decorated shelving, glowing mushrooms and layered trees. Rebuild with
+`python3 tools/draw_concept_pass.py`. Tree derivatives retain source paths and
+hashes in `assets/atmosphere/trees/sources.json`; their four-frame animation uses
+canopy sway and glow changes on supplied cutouts, not redrawn tree poses.
+
+Shelf sheets are 80×128 cells, nine rows and four columns, with a separate
+decoration atlas. Two entrance display racks show real stored potion sprites;
+ingredient shelves conceal stock. Thoughts use a cloud with round trailing dots;
+speech uses a warm rounded panel with a pointed tail. The old bordered icon frame
+is exclusive to shelf hints. Customer requests are intermittent or learned by
+talking, with an animated potion icon inline in the spoken sentence.
+
 A cozy fantasy potion shop with warm wood, cool stone, stained glass, and friendly
 big-headed pixel characters. Recognizable assets are part of the requested game,
 not an optional finishing step. Labeled geometry is only a layout placeholder.
@@ -70,18 +86,25 @@ and the old queue rectangle/text are absent.
 
 ## Environment
 
-Oak floorboards with seams, grain, knots and nails; shaded stone-block walls;
-three arched stained-glass windows with potion motifs and colored light. Use a
-full-height back wall and cutaway side/front walls to keep gameplay readable.
+Current environment: `assets/cottage/`. A crooked woodland shop with an irregular
+outline, bevels and alcoves, worn plank flooring and a twelve-piece rustic wall
+kit. Timber, plaster, logs, mossy stone, ivy, lanterns, niches and stained glass
+coordinate without repeating one generic wall. Back walls are full-height;
+sides/front are cut away. A narrow scenic forest surround has twisted trunks,
+dark foliage, mushrooms and gently blinking motes. It is not an outdoor level.
 
-Floors, masonry, door, windows and chests use `assets/environment/pixel_shop/`.
-Current shelves use `assets/furniture/library/`: nine EMPTY, grounded cases in
-restrained worn wood finishes. Boards, posts, drawer fronts and hardware belong
-to the furniture; ingredients and bottles do not. Runtime sprites sit directly
-on board slots and form stock piles. Cases form loose library rows with clear
-aisles, not brightly colored isolated display blocks. Keep feet/contact shadows
-on the floor and align item bottoms to board height. Older stocked shelf textures
-are reference assets, not active furniture.
+Nine EMPTY shelf silhouettes include seven tall designs and two low hutches:
+bowed ladder case, stacked cubbies, living-wood stands, serpentine cupboard,
+leaning tower, domed hutch, barrel-like rack and moon-spired cabinet. Feet meet
+the floor; detail comes from structure and carving, not baked item pictures.
+There are no chests. Ingredient stock is hidden in the world until searched.
+Temporary ingredient bubbles pop, bob and fade over stocked shelves, with a
+gentle source-shelf glow. Requests trigger relevant hints plus a distraction.
+Searching always shows real contents, so hints are optional aids, not crafting locks.
+
+`network/cottage_layout.gd` is the one floor-outline source for art, collision
+segments and navigation. Do not restore the old rectangular wall collider.
+The entrance door still reuses `assets/environment/pixel_shop/door.png`.
 
 The cauldron is an independent `assets/props/cauldron/` asset: violet iron, jade
 runes, subtle magical fire, separate bubbling liquid and idle/brewing/ready rows.
@@ -98,11 +121,14 @@ thorned root, moth, bone, violet crystals, slime pearl, raven feather, ember hea
 and silver spores. Use silhouette as well as color.
 
 Every item lives in `assets/items/<category>/<id>/` with four 32×40 SVG/PNG frames
-and a 128×40 sheet. `ItemIcon` is reused everywhere: shelf stock, recipes, player
+and a 128×40 sheet. `ItemIcon` is reused everywhere: shelf hints/search, inventory, recipes, player
 hands, cauldron input/result, customer bubbles and transfer animations. Do not
 redraw a tiny alternate bottle or substitute a colored rectangle in UI. Recipe
 cards show two ingredient sprites leading to their output bottle, not names.
-Stock colors must not be tinted by furniture materials.
+Stock colors must not be tinted by furniture materials. The eight-item bag has
+one active selection; any recipe can use its contents regardless of demand.
+Heart/question/thinking/sparkle/attention emotes use the cottage emote sheet;
+UI discoveries and bag updates have small reveal/pop animations.
 
 ## Reproducible asset pipeline
 
@@ -115,6 +141,7 @@ python3 tools/draw_cozy_customers.py
 python3 tools/draw_shop_interior.py
 python3 tools/draw_item_catalog.py
 python3 tools/draw_library_assets.py
+python3 tools/draw_cottage.py
 ```
 
 Generators contain palette and pose definitions. They emit independently editable
@@ -123,7 +150,8 @@ skin variants into rows. Regenerate only the affected art; check for manual outp
 edits before overwriting. Keep source and runtime textures in version control.
 `tools/profile_art.py` contains the six original side-profile drawings, shared
 by the generators so skin palettes and pose layout stay consistent across views.
-`tools/draw_library_assets.py` produces the active empty cases and cauldron;
+`tools/draw_cottage.py` produces the active shelves, walls, floor, woods and emotes.
+`tools/draw_library_assets.py` produces the active cauldron and earlier empty cases;
 `tools/shelf_art.py` retains the earlier stocked display-case reference art.
 Godot creates `.import` metadata; do not commit the `.godot/` cache.
 

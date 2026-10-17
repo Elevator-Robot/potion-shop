@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://client/customer.gd" id="1_customer"]
 [ext_resource type="Texture2D" path="res://assets/customers/cozy/elf_fantasy.png" id="2_sprite"]
 [ext_resource type="Script" path="res://client/item_icon.gd" id="3_bottle"]
-[ext_resource type="Texture2D" path="res://assets/ui/order_bubble.svg" id="4_bubble"]
+[ext_resource type="Texture2D" path="res://assets/atmosphere/thought.png" id="4_bubble"]
 
 [node name="Customer" type="Node2D"]
 script = ExtResource("1_customer")
@@ -26,6 +26,7 @@ z_index = 8
 position = Vector2(0, -84)
 texture_filter = 1
 texture = ExtResource("4_bubble")
+hframes = 4
 
 [node name="OrderIcon" type="Sprite2D" parent="."]
 z_index = 8

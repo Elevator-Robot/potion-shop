@@ -48,6 +48,11 @@ If clicks select nodes in the editor, inspect Game panel input/selection mode.
 Also test a standalone game window before concluding the menu code is broken.
 If advice fails, reproduce and verify rather than repeating the same instruction.
 
+An open Godot editor can save an older scene over external edits. If removed
+nodes or old boundaries reappear, inspect the diff, preserve a copy, and resolve
+the stale scene tab before continuing. Do not silently overwrite unfamiliar user
+edits. Fresh standalone launches read the current files from disk.
+
 Ask for the shortest reproduction, expected versus actual behavior, and the full
 Godot error including script and line. For co-op, identify host/client, addresses,
 and whether both processes use the same revision. For appearance, ask for a

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" shape-rendering="crispEdges">
+<rect x="0" y="0" width="64" height="64" fill="#332e35" opacity="1"/>
+<rect x="0" y="0" width="64" height="64" fill="#918879" opacity="1"/>
+<rect x="2" y="2" width="60" height="1" fill="#b0a08b" opacity="1"/>
+<rect x="4" y="7" width="54" height="1" fill="#716653" opacity="1"/>
+<rect x="2" y="10" width="60" height="1" fill="#b0a08b" opacity="1"/>
+<rect x="4" y="15" width="54" height="1" fill="#716653" opacity="1"/>
+<rect x="2" y="18" width="60" height="1" fill="#b0a08b" opacity="1"/>
+<rect x="4" y="23" width="54" height="1" fill="#716653" opacity="1"/>
+<rect x="2" y="26" width="60" height="1" fill="#b0a08b" opacity="1"/>
+<rect x="4" y="31" width="54" height="1" fill="#716653" opacity="1"/>
+<rect x="2" y="34" width="60" height="1" fill="#b0a08b" opacity="1"/>
+<rect x="4" y="39" width="54" height="1" fill="#716653" opacity="1"/>
+<rect x="2" y="42" width="60" height="1" fill="#b0a08b" opacity="1"/>
+<rect x="4" y="47" width="54" height="1" fill="#716653" opacity="1"/>
+<rect x="2" y="50" width="60" height="1" fill="#b0a08b" opacity="1"/>
+<rect x="4" y="55" width="54" height="1" fill="#716653" opacity="1"/>
+<rect x="2" y="58" width="60" height="1" fill="#b0a08b" opacity="1"/>
+<rect x="4" y="63" width="54" height="1" fill="#716653" opacity="1"/>
+<rect x="0" y="0" width="64" height="5" fill="#3d302e" opacity="1"/>
+<rect x="0" y="1" width="64" height="1" fill="#9c7b56" opacity="1"/>
+<rect x="0" y="58" width="64" height="6" fill="#392c2c" opacity="1"/>
+<rect x="0" y="58" width="64" height="1" fill="#897254" opacity="1"/>
+<path d="M8 0h8l-2 20 4 22-3 22H7l3-22-4-22z" fill="#392c2e" opacity="1"/>
+<path d="M10 0h3l-1 20 4 22-3 22h-2l2-22-4-22z" fill="#85654a" opacity="1"/>
+<path d="M48 0h7l-2 23 4 41h-8l-3-40z" fill="#48352e" opacity="1"/>
+<path d="M12 7l4-3 38 44-4 4z" fill="#564035" opacity="1"/>
+<path d="M14 8l1-1 36 42-1 1z" fill="#ac8a5c" opacity="1"/>
+<path d="M33 13v9h-3v6h2v7h-1v-6h-3v-8h3v-8z" fill="#605f56" opacity="1"/>
+</svg>

@@ -1,5 +1,9 @@
 # Interactive pixel shop
 
+The current cottage uses `door.png` from this set. Floors/walls/windows and
+shelves have moved to `assets/cottage/`. Chests are removed from play. This older
+kit remains available as reference; the history below describes its earlier use.
+
 The floor, masonry, windows, door and chests remain active. Shelf/floor-clutter
 art has moved to `assets/furniture/library/`, item sprites to `assets/items/`,
 and the cauldron to `assets/props/cauldron/`. The older stocked displays and item

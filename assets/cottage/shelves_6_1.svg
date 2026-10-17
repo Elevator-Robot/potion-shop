@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="112" viewBox="0 0 64 112" shape-rendering="crispEdges">
+<ellipse cx="32" cy="110" rx="30" ry="2" fill="#101922" opacity="0.7"/>
+<path d="M11 111l12-19-3-20 7-20-4-24 7-23h7l-2 24 6 21-7 23 5 22 13 16H37l-5-13-8 13z" fill="#30382e" opacity="1"/>
+<path d="M18 108l10-16-3-19 7-21-4-24 5-21h2l-2 23 5 20-7 23 5 22 8 13h-4l-8-14-11 14z" fill="#667453" opacity="1"/>
+<path d="M14 24h46l-2 5H16z" fill="#30382e" opacity="1"/>
+<rect x="15" y="24" width="44" height="2" fill="#667453" opacity="1"/>
+<rect x="16" y="24" width="42" height="1" fill="#afba83" opacity="1"/>
+<path d="M30 35l-14 -7h42l-28 7z" fill="#30382e" opacity="1"/>
+<rect x="17" y="16" width="2" height="8" fill="#667453" opacity="1"/>
+<rect x="54" y="12" width="2" height="12" fill="#667453" opacity="1"/>
+<path d="M2 48h40l-2 5H4z" fill="#30382e" opacity="1"/>
+<rect x="3" y="48" width="38" height="2" fill="#667453" opacity="1"/>
+<rect x="4" y="48" width="36" height="1" fill="#afba83" opacity="1"/>
+<path d="M30 59l-26 -7h36l-10 7z" fill="#30382e" opacity="1"/>
+<rect x="5" y="40" width="2" height="8" fill="#667453" opacity="1"/>
+<rect x="36" y="36" width="2" height="12" fill="#667453" opacity="1"/>
+<path d="M17 74h44l-2 5H19z" fill="#30382e" opacity="1"/>
+<rect x="18" y="74" width="42" height="2" fill="#667453" opacity="1"/>
+<rect x="19" y="74" width="40" height="1" fill="#afba83" opacity="1"/>
+<path d="M30 85l-11 -7h40l-29 7z" fill="#30382e" opacity="1"/>
+<rect x="20" y="66" width="2" height="8" fill="#667453" opacity="1"/>
+<rect x="55" y="62" width="2" height="12" fill="#667453" opacity="1"/>
+<path d="M4 101h48l-2 5H6z" fill="#30382e" opacity="1"/>
+<rect x="5" y="101" width="46" height="2" fill="#667453" opacity="1"/>
+<rect x="6" y="101" width="44" height="1" fill="#afba83" opacity="1"/>
+<path d="M30 112l-24 -7h44l-20 7z" fill="#30382e" opacity="1"/>
+<rect x="7" y="93" width="2" height="8" fill="#667453" opacity="1"/>
+<rect x="46" y="89" width="2" height="12" fill="#667453" opacity="1"/>
+<path d="M23 19L9 9H4l13 16 9 4zM37 27l14-15h9L44 32z" fill="#667453" opacity="1"/>
+<ellipse cx="27" cy="42" rx="3" ry="5" fill="#252b2a" opacity="1"/>
+<rect x="26" y="40" width="1" height="4" fill="#afba83" opacity="1"/>
+<ellipse cx="30" cy="68" rx="3" ry="5" fill="#252b2a" opacity="1"/>
+<rect x="29" y="66" width="1" height="4" fill="#afba83" opacity="1"/>
+<ellipse cx="32" cy="91" rx="3" ry="5" fill="#252b2a" opacity="1"/>
+<rect x="31" y="89" width="1" height="4" fill="#afba83" opacity="1"/>
+</svg>

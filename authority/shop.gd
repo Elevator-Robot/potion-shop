@@ -1,6 +1,6 @@
 extends RefCounted
 ## The shop's rules, with no network in them: one of these keeps every shared
-## fact - browsing customers, shelf and storage contents, the cauldron, the
+## fact - browsing customers, shelf and player inventory, the cauldron, the
 ## coins, the reputation and the day clock. authority/main.gd works out who
 ## asked and where they were standing, then calls in here; the document this
 ## holds is what every client renders.
@@ -18,6 +18,19 @@ var _navigation := Navigation.new()
 var _paths := {}
 var _last_customer_tick := 0
 var _effect_id := 0
+var _hint_id := 0
+var _hint_pending: Array = []
+const CHAT_SECONDS := 5.0
+const CHAT_GRACE_SECONDS := 2.0
+const REQUEST_LINES := [
+	["I'd like ", ", please."],
+	["Could I have ", "? My shadow has the hiccups."],
+	["One ", ", please. My teapot is haunted."],
+	["May I try ", "? The mushrooms recommended it."],
+	["A little ", ", please. It's for a small dragon."],
+	["Could you brew ", " for me?"],
+]
+const BANTER := [["Lovely spooky day.", "The best kind!"], ["Did that fern wink?", "It owes me money."], ["Nice hat!", "It chose me."], ["Smells like magic.", "Or mushroom soup."]]
 
 
 func _init() -> void:
@@ -35,9 +48,10 @@ func reset() -> void:
 		"day_seconds": Game.DAY_SECONDS,
 		"now_msec": now,
 		"held": {},
+		"inventory": {},
 		"shelves": {},
 		"shelf_stock": {},
-		"storage": [],
+		"hints": [],
 		"cauldron": {"contents": [], "potion": "", "brew_start_msec": 0, "brew_end_msec": 0, "ready": false},
 		"customers": [],
 		"door_open_until": 0,
@@ -47,6 +61,7 @@ func reset() -> void:
 	# on both sides of the wire.
 	for seat in Game.MAX_PLAYERS:
 		doc["held"][str(seat)] = ""
+		doc["inventory"][str(seat)] = []
 	for item in Game.ALL_ITEMS:
 		doc["shelves"][item] = 0
 	for station in Game.FURNITURE:
@@ -62,8 +77,10 @@ func reset() -> void:
 	_paths.clear()
 	_last_customer_tick = now
 	_effect_id = 0
+	_hint_id = 0
+	_hint_pending.clear()
 	# The first customer of the day walks in well before the steady rate.
-	_next_arrival_msec = now + 3000
+	_next_arrival_msec = now + int(Game.FIRST_CUSTOMER_SECONDS * 1000.0)
 
 
 ## What a seat is carrying, "" for empty hands.
@@ -76,13 +93,10 @@ func held(seat: int) -> String:
 ## possible; nothing changes when it returns a refusal.
 ## ---------------------------------------------------------------------------
 
-## Take a raw ingredient off its shelf pile, or (item == "") one item out of the
-## storage crate. One carried item at a time.
+## Collect a shelf item into the bag, selecting it for the next interaction.
 func take(seat: int, item: String, station: String = "") -> Dictionary:
-	if held(seat) != "":
-		return _no("hands_full")
-	if item == "":
-		return _take_from_storage(seat)
+	if inventory(seat).size() >= Game.INVENTORY_CAPACITY:
+		return _no("inventory_full")
 	if not Game.is_item(item):
 		return _no("no_such_item")
 	if station == "":
@@ -96,16 +110,14 @@ func take(seat: int, item: String, station: String = "") -> Dictionary:
 	return _yes({"item": item})
 
 
-## Put the carried item into the storage crate.
-func put(seat: int) -> Dictionary:
-	var item := held(seat)
-	if item == "":
-		return _no("hands_empty")
-	if doc["storage"].size() >= Game.STORAGE_CAPACITY:
-		return _no("storage_full")
-	doc["storage"].append(item)
-	_carry(seat, "")
-	return _yes({"item": item})
+func inventory(seat: int) -> Array:
+	return doc["inventory"].get(str(seat), [])
+
+func select_item(seat: int, item: String) -> Dictionary:
+	if item != "" and not inventory(seat).has(item):
+		return _no("not_in_inventory")
+	doc["held"][str(seat)] = item
+	return _yes({})
 
 
 ## Put an ingredient back onto a matching shelf.
@@ -156,10 +168,10 @@ func add(seat: int) -> Dictionary:
 	return _yes({"item": raw, "brewing": potion})
 
 
-## Take the finished potion out of the cauldron, into empty hands.
+## Take the finished potion into the bag if there is room.
 func collect(seat: int) -> Dictionary:
-	if held(seat) != "":
-		return _no("hands_full")
+	if inventory(seat).size() >= Game.INVENTORY_CAPACITY:
+		return _no("inventory_full")
 	var cauldron: Dictionary = doc["cauldron"]
 	if not bool(cauldron["ready"]):
 		return _no("not_ready")
@@ -208,11 +220,56 @@ func talk(customer_id: int, from: Vector2) -> Dictionary:
 	if customer.is_empty() or customer["phase"] == "leaving":
 		return _no("no_customer")
 	customer["phase"] = "waiting"
-	customer["look_until"] = Time.get_ticks_msec() + 3000
+	var now := Time.get_ticks_msec()
+	_pause_for_chat(customer, now)
+	customer["phase"] = "talking"
+	customer["look_until"] = now + int(CHAT_SECONDS * 1000)
 	customer["next_glance"] = customer["look_until"]
 	customer["facing"] = (from - (customer["position"] as Vector2)).angle()
+	customer["speech"] = "..."
+	customer["speech_start"] = now
+	customer["speech_until"] = customer["chat_until"]
+	customer["speaking"] = true
 	_paths.erase(customer_id)
-	return _yes({"message": "This bottle, please!", "customer": customer_id})
+	_schedule_hints(customer, now)
+	var line: Array = REQUEST_LINES[posmod(customer_id - 1, REQUEST_LINES.size())]
+	return _yes({"dialogue_before": line[0], "dialogue_after": line[1], "potion": customer["order"], "customer": customer_id})
+
+func _pause_for_chat(customer: Dictionary, now: int) -> void:
+	if int(customer.get("pause_until", 0)) <= now:
+		customer["pause_started"] = now
+	customer["chat_until"] = now + int(CHAT_SECONDS * 1000)
+	customer["pause_until"] = now + int((CHAT_SECONDS + CHAT_GRACE_SECONDS) * 1000)
+	customer["patience_paused"] = true
+	customer["next_social"] = now + 22000
+
+func _try_social(now: int) -> void:
+	var visitors: Array = doc["customers"]
+	for i in visitors.size():
+		var a: Dictionary = visitors[i]
+		if a["phase"] not in ["waiting", "browsing"] or now < int(a.get("next_social", 0)):
+			continue
+		for j in range(i + 1, visitors.size()):
+			var b: Dictionary = visitors[j]
+			if b["phase"] not in ["waiting", "browsing"] or now < int(b.get("next_social", 0)):
+				continue
+			var from: Vector2 = a["position"]
+			var to: Vector2 = b["position"]
+			if from.distance_to(to) > 72.0 or not Game.motion_clear(from, to, 1.0):
+				continue
+			var line: Array = BANTER[posmod(int(a["id"]) + int(b["id"]), BANTER.size())]
+			for k in 2:
+				var person: Dictionary = a if k == 0 else b
+				_pause_for_chat(person, now)
+				person["phase"] = "chatting"
+				person["speech"] = line[k]
+				person["speech_start"] = now + k * 2500
+				person["speech_until"] = now + (k + 1) * 2500
+				person["speaking"] = k == 0
+				_paths.erase(int(person["id"]))
+			a["facing"] = (to - from).angle()
+			b["facing"] = (from - to).angle()
+			break
 
 
 func door() -> Dictionary:
@@ -254,8 +311,9 @@ func tick(now: int = -1) -> bool:
 		changed = true
 
 	changed = _move_customers(now) or changed
+	changed = _update_hints(now) or changed
 
-	if now >= _next_arrival_msec and doc["customers"].size() < Game.MAX_CUSTOMERS:
+	if now >= _next_arrival_msec and doc["customers"].size() < Game.customer_limit(int(doc["day"])):
 		_arrive(now)
 		changed = true
 
@@ -270,11 +328,21 @@ func _move_customers(now: int) -> bool:
 	if now - _last_customer_tick < 100:
 		return false
 	var delta := minf(float(now - _last_customer_tick) / 1000.0, 0.25)
+	var previous_tick := _last_customer_tick
 	_last_customer_tick = now
 	var survivors: Array = []
 	for entry in doc["customers"]:
 		var customer: Dictionary = entry
 		var id := int(customer["id"])
+		if customer["phase"] != "leaving":
+			var paused := maxi(0, mini(now, int(customer.get("pause_until", 0))) - maxi(previous_tick, int(customer.get("pause_started", 0))))
+			customer["deadline_msec"] = int(customer["deadline_msec"]) + paused
+		customer["patience_paused"] = now < int(customer.get("pause_until", 0)) and customer["phase"] != "leaving"
+		customer["speaking"] = now >= int(customer.get("speech_start", 0)) and now < int(customer.get("speech_until", 0))
+		if customer["phase"] in ["talking", "chatting"] and now >= int(customer["chat_until"]):
+			customer["phase"] = "waiting"
+			customer["look_until"] = now + 1500
+			customer["next_glance"] = now + 1500
 		if customer["phase"] != "leaving" and now >= int(customer["deadline_msec"]):
 			customer["angry"] = true
 			doc["reputation"] = clampi(int(doc["reputation"]) - Game.REPUTATION_LOSS, 0, Game.REPUTATION_MAX)
@@ -307,6 +375,7 @@ func _move_customers(now: int) -> bool:
 			_open_door(now)
 		survivors.append(customer)
 	doc["customers"] = survivors
+	_try_social(now)
 	return not survivors.is_empty()
 
 
@@ -317,7 +386,7 @@ func _open_door(now: int) -> void:
 func _browse(customer: Dictionary) -> void:
 	var id := int(customer["id"])
 	var goal: Vector2 = Game.BROWSE_POINTS[posmod(id - 1 + int(customer["visits"]) * 3, Game.BROWSE_POINTS.size())]
-	var entering: bool = (customer["position"] as Vector2).y < 10.0
+	var entering := not Game.in_bounds(customer["position"])
 	var route := _navigation.route(Game.DOOR_POINT if entering else customer["position"], goal)
 	if entering:
 		route.push_front(Game.DOOR_POINT)
@@ -354,8 +423,18 @@ func _arrive(now: int) -> void:
 		"visits": 0,
 		"look_until": 0,
 		"next_glance": 0,
+		"next_social": now + 6000,
+		"pause_started": 0,
+		"pause_until": 0,
+		"patience_paused": false,
+		"chat_until": 0,
+		"speech": "",
+		"speech_start": 0,
+		"speech_until": 0,
+		"speaking": false,
 	}
 	doc["customers"].append(customer)
+	_schedule_hints(customer, now)
 	_browse(customer)
 	_open_door(now)
 	_next_customer += 1
@@ -378,19 +457,60 @@ func _start_day(day: int, now: int) -> void:
 ## A player left for good: their hands are free again.
 func release(seat: int) -> void:
 	doc["held"][str(seat)] = ""
-
-
-func _take_from_storage(seat: int) -> Dictionary:
-	var stored: Array = doc["storage"]
-	if stored.is_empty():
-		return _no("storage_empty")
-	var item := str(stored.pop_back())
-	_carry(seat, item)
-	return _yes({"item": item})
+	doc["inventory"][str(seat)] = []
 
 
 func _carry(seat: int, item: String) -> void:
-	doc["held"][str(seat)] = item
+	var bag := inventory(seat)
+	if item != "":
+		bag.append(item)
+		doc["held"][str(seat)] = item
+	else:
+		bag.erase(held(seat))
+		doc["held"][str(seat)] = str(bag[0]) if not bag.is_empty() else ""
+
+func _schedule_hints(customer: Dictionary, now: int) -> void:
+	var needs := Game.recipe_needs(str(customer["order"]))
+	var index := 0
+	for item in needs:
+		_hint_pending.append({"due": now + 800 + index * 350, "customer": int(customer["id"]), "item": str(item)})
+		index += 1
+	var choice := posmod(int(customer["id"]) * 5, Game.RAW_ITEMS.size())
+	while needs.has(Game.RAW_ITEMS[choice]):
+		choice = (choice + 1) % Game.RAW_ITEMS.size()
+	_hint_pending.append({"due": now + 1500, "customer": int(customer["id"]), "item": Game.RAW_ITEMS[choice]})
+	# Bound repeated requests; a talk action may remind the player, never flood state.
+	while _hint_pending.size() > 24:
+		_hint_pending.pop_front()
+
+func _update_hints(now: int) -> bool:
+	var changed := false
+	var active: Array = []
+	for hint in doc["hints"]:
+		if int(hint["until"]) > now:
+			active.append(hint)
+		else:
+			changed = true
+	var pending: Array = []
+	for job in _hint_pending:
+		if int(job["due"]) > now:
+			pending.append(job)
+			continue
+		var customer := get_customer(int(job["customer"]))
+		if customer.is_empty() or customer["phase"] == "leaving":
+			continue
+		var stations: Array[String] = []
+		for station in doc["shelf_stock"]:
+			if stock_at(station, job["item"]) > 0:
+				stations.append(station)
+		if stations.is_empty():
+			continue
+		_hint_id += 1
+		active.append({"id": _hint_id, "station": stations[posmod(int(job["customer"]), stations.size())], "item": job["item"], "until": now + 3200})
+		changed = true
+	_hint_pending = pending
+	doc["hints"] = active
+	return changed
 
 
 func get_customer(id: int) -> Dictionary:

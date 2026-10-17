@@ -3,7 +3,8 @@
 Original dark-fantasy pixel artwork. Every item has its own folder containing
 four editable SVG/PNG frames and a **128×40** sheet of four **32×40** cells.
 No item is painted into furniture. `client/item_icon.gd` is the shared renderer
-used by shelf stacks, carried items, transfer effects, recipes and customer bubbles.
+used by transient shelf hints, search panels, inventory, carried items, transfer
+effects, recipes and customer bubbles. World shelf stock is no longer permanent.
 
 ## Six potion silhouettes
 

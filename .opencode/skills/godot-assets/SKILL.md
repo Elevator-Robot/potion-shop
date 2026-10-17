@@ -51,6 +51,9 @@ description: Create, redraw, animate, import, or visually verify Potion Shop spr
   customers. Furniture artwork must be empty; actual item sprites sit on board
   anchors, with stock controlling visibility. Do not bake inventory into shelves
   or rely on item-name labels to compensate for indistinct silhouettes.
+  The current cottage hides permanent world stock: requests trigger brief useful
+  and distracting hints; searching shows real contents. Keep hints synchronized
+  through host state and do not accidentally expose all ingredients permanently.
 - **Scale:** judge at game resolution, not only an enlarged contact sheet. Compare
   visible body height as well as canvas height; transparent padding affects scale.
   Nearest filtering preserves pixel edges, but non-integer scaling can produce

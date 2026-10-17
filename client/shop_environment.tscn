@@ -1,111 +1,55 @@
 [gd_scene load_steps=7 format=3]
-
 [ext_resource type="Script" path="res://client/shop_environment.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/environment/pixel_shop/floor.png" id="2_floor"]
-[ext_resource type="Texture2D" path="res://assets/environment/pixel_shop/stone.png" id="3_stone"]
-[ext_resource type="Texture2D" path="res://assets/environment/pixel_shop/window.png" id="4_window"]
-[ext_resource type="Texture2D" path="res://assets/environment/pixel_shop/door.png" id="5_door"]
-[ext_resource type="Texture2D" path="res://assets/environment/window_light.png" id="6_light"]
+[ext_resource type="Texture2D" path="res://assets/atmosphere/terrain.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/atmosphere/floor.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/environment/pixel_shop/door.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/atmosphere/windows.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/atmosphere/windows.png" id="6"]
 
 [node name="ShopEnvironment" type="Node2D"]
 texture_filter = 1
 script = ExtResource("1")
-
 [node name="Backdrop" type="Polygon2D" parent="."]
-color = Color(0.075, 0.095, 0.12, 1)
-polygon = PackedVector2Array(-2000, -2000, 2000, -2000, 2000, 2000, -2000, 2000)
-
-[node name="FoundationShadow" type="Polygon2D" parent="."]
-color = Color(0.035, 0.05, 0.065, 0.7)
-polygon = PackedVector2Array(-38, -90, 680, -90, 680, 452, -38, 452)
-
-[node name="BackWall" type="Sprite2D" parent="."]
-position = Vector2(-32, -96)
-scale = Vector2(2, 2)
-texture_repeat = 2
-texture = ExtResource("3_stone")
+color = Color(0.035, 0.065, 0.085, 1)
+polygon = PackedVector2Array(-2000,-2000,2000,-2000,2000,2000,-2000,2000)
+[node name="Woods" type="Sprite2D" parent="."]
+position = Vector2(-112,-144)
+scale = Vector2(2,2)
+texture = ExtResource("2")
 centered = false
-region_enabled = true
-region_rect = Rect2(0, 0, 352, 48)
-
-[node name="Coping" type="Polygon2D" parent="."]
-color = Color(0.65, 0.67, 0.61, 1)
-polygon = PackedVector2Array(-34, -100, 674, -100, 674, -94, -34, -94)
-
+[node name="GeneratedWalls" type="Node2D" parent="."]
+[node name="Motes" type="Node2D" parent="."]
 [node name="Floor" type="Sprite2D" parent="."]
-scale = Vector2(2, 2)
-texture = ExtResource("2_floor")
+position = Vector2(0,-20)
+scale = Vector2(2,2)
+texture = ExtResource("3")
 centered = false
-
-[node name="Window0" type="Sprite2D" parent="."]
-position = Vector2(72, -94)
-texture = ExtResource("4_window")
-hframes = 4
-centered = false
-scale = Vector2(2, 2)
-
-[node name="Window1" type="Sprite2D" parent="."]
-position = Vector2(432, -94)
-texture = ExtResource("4_window")
-hframes = 4
-centered = false
-scale = Vector2(2, 2)
-
-[node name="Window2" type="Sprite2D" parent="."]
-position = Vector2(560, -94)
-texture = ExtResource("4_window")
-hframes = 4
-centered = false
-scale = Vector2(2, 2)
-
 [node name="Door" type="Sprite2D" parent="."]
-position = Vector2(284, -96)
-texture = ExtResource("5_door")
+position = Vector2(356,-120)
+scale = Vector2(1.5,1.5)
+texture = ExtResource("4")
 hframes = 4
 centered = false
-scale = Vector2(1.5, 1.5)
-
 [node name="DoorCue" type="Label" parent="."]
 visible = false
-position = Vector2(315, -115)
 text = "E"
-mouse_filter = 2
-theme_override_font_sizes/font_size = 12
 theme_override_constants/outline_size = 4
-
-[node name="LightLeft" type="Sprite2D" parent="."]
-position = Vector2(84, 0)
-texture = ExtResource("6_light")
+mouse_filter = 2
+[node name="Window0" type="Sprite2D" parent="."]
+position = Vector2(88,-92)
+scale = Vector2(1.3,1.3)
+texture = ExtResource("5")
+hframes = 4
 centered = false
-
-[node name="LightRight" type="Sprite2D" parent="."]
-position = Vector2(448, 0)
-texture = ExtResource("6_light")
+[node name="Window1" type="Sprite2D" parent="."]
+position = Vector2(476,-92)
+scale = Vector2(1.3,1.3)
+texture = ExtResource("6")
+hframes = 4
 centered = false
-
-[node name="LeftWall" type="Sprite2D" parent="."]
-position = Vector2(-32, 0)
-scale = Vector2(2, 2)
-texture_repeat = 2
-texture = ExtResource("3_stone")
+[node name="Window2" type="Sprite2D" parent="."]
+position = Vector2(552,-58)
+scale = Vector2(1,1)
+texture = ExtResource("5")
+hframes = 4
 centered = false
-region_enabled = true
-region_rect = Rect2(0, 0, 16, 220)
-
-[node name="RightWall" type="Sprite2D" parent="."]
-position = Vector2(640, 0)
-scale = Vector2(2, 2)
-texture_repeat = 2
-texture = ExtResource("3_stone")
-centered = false
-region_enabled = true
-region_rect = Rect2(0, 0, 16, 220)
-
-[node name="FrontWall" type="Sprite2D" parent="."]
-position = Vector2(-32, 420)
-scale = Vector2(2, 2)
-texture_repeat = 2
-texture = ExtResource("3_stone")
-centered = false
-region_enabled = true
-region_rect = Rect2(0, 0, 352, 10)

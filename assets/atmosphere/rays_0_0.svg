@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="112" viewBox="0 0 96 112" shape-rendering="crispEdges">
+<defs><clipPath id="beam"><path d="M28 0h40l26 112H1z"/></clipPath></defs>
+<g clip-path="url(#beam)">
+<rect x="0" y="0" width="96" height="8" fill="#b68ad6" opacity="0.23"/>
+<rect x="0" y="8" width="96" height="8" fill="#b68ad6" opacity="0.21357142857142858"/>
+<rect x="0" y="16" width="96" height="8" fill="#b68ad6" opacity="0.19714285714285718"/>
+<rect x="0" y="24" width="96" height="8" fill="#b68ad6" opacity="0.18071428571428572"/>
+<rect x="0" y="32" width="96" height="8" fill="#b68ad6" opacity="0.16428571428571428"/>
+<rect x="0" y="40" width="96" height="8" fill="#b68ad6" opacity="0.14785714285714285"/>
+<rect x="0" y="48" width="96" height="8" fill="#b68ad6" opacity="0.13142857142857142"/>
+<rect x="0" y="56" width="96" height="8" fill="#b68ad6" opacity="0.115"/>
+<rect x="0" y="64" width="96" height="8" fill="#b68ad6" opacity="0.09857142857142859"/>
+<rect x="0" y="72" width="96" height="8" fill="#b68ad6" opacity="0.08214285714285713"/>
+<rect x="0" y="80" width="96" height="8" fill="#b68ad6" opacity="0.06571428571428571"/>
+<rect x="0" y="88" width="96" height="8" fill="#b68ad6" opacity="0.049285714285714294"/>
+<rect x="0" y="96" width="96" height="8" fill="#b68ad6" opacity="0.03285714285714287"/>
+<rect x="0" y="104" width="96" height="8" fill="#b68ad6" opacity="0.01642857142857142"/>
+<path d="M39 0h3l12 112h-8z" fill="#211f36" opacity="0.22"/>
+<path d="M54 0h3l12 112h-8z" fill="#211f36" opacity="0.22"/>
+<rect x="0" y="25" width="96" height="4" fill="#211f36" opacity="0.18"/>
+<rect x="0" y="55" width="96" height="4" fill="#211f36" opacity="0.18"/>
+<rect x="0" y="85" width="96" height="4" fill="#211f36" opacity="0.18"/>
+</g>
+</svg>

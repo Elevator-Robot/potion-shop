@@ -3,18 +3,17 @@ extends RefCounted
 ## network helpers. Client and shared code never load anything from authority/.
 
 const MAX_PLAYERS := 2
+const Cottage = preload("res://network/cottage_layout.gd")
 
-## Room geometry in pixels, shared so the client's floor drawing and the
-## authority's bounds check cannot drift apart. The interior is 640x420; the
-## 16 px walls sit just outside it.
-const ROOM_SIZE := Vector2(640.0, 420.0)
+## Room extent for the irregular cottage. Exact floor and wall boundaries live
+## in Cottage.FLOOR_POINTS and are shared by art, physics and navigation.
+const ROOM_SIZE := Vector2(640.0, 436.0)
 const WALL := 16.0
 const PLAYER_RADIUS := 10.0
-## Where a player centre may legally be: the interior inset by the player
-## radius (10, 10 to 630, 410).
-const PLAY_BOUNDS := Rect2(10.0, 10.0, 620.0, 400.0)
+## Bounding rectangle only; the actual walkable outline is not rectangular.
+const PLAY_BOUNDS := Rect2(0.0, -20.0, 624.0, 436.0)
 ## Frame the building, including the raised back wall and cutaway front.
-const CAMERA_RECT := Rect2(-48.0, -116.0, 736.0, 580.0)
+const CAMERA_RECT := Rect2(-112.0, -144.0, 848.0, 664.0)
 
 const WALK_SPEED := 120.0     # px/s, flat top-down 8-direction walking
 const MAX_SPEED := 240.0      # the authority's sanity bound, above WALK_SPEED
@@ -22,7 +21,7 @@ const SEND_INTERVAL := 1.0 / 20.0
 
 ## One spawn point per seat, in pixels: side by side on the free middle of the
 ## shop floor, clear of every station.
-const SPAWN_POINTS := [Vector2(280.0, 252.0), Vector2(312.0, 252.0)]
+const SPAWN_POINTS := [Vector2(248.0, 240.0), Vector2(280.0, 240.0)]
 ## Both players initially face into the room (down the screen, +y).
 const SPAWN_FACING := 1.5707964
 
@@ -75,32 +74,32 @@ const ITEM_COLORS := {
 ## Feet anchors of the furniture. Art, interaction and navigation use this one
 ## layout; the tall parts of shelves are above their shallow collision bases.
 const FURNITURE := {
-	"moon_west": {"kind": "shelf", "stock": [MOONLEAF, FIRECAP, WATERBLOOM], "at": Vector2(88, 112), "variant": 0},
-	"fire_north": {"kind": "shelf", "stock": ["void_eye", "blood_root", "ghost_moth"], "at": Vector2(216, 112), "variant": 1},
-	"water_east": {"kind": "shelf", "stock": ["bone_shard", "dusk_crystal", "slime_pearl"], "at": Vector2(560, 112), "variant": 2},
-	"moon_island": {"kind": "shelf", "stock": ["raven_feather", "ember_heart", "silver_spore"], "at": Vector2(224, 272), "variant": 3},
-	"fire_east": {"kind": "shelf", "stock": [MOONLEAF, "void_eye", "bone_shard", "raven_feather"], "at": Vector2(544, 272), "variant": 4},
-	"water_south": {"kind": "shelf", "stock": POTIONS, "at": Vector2(512, 376), "variant": 5},
-	"moon_nook": {"kind": "shelf", "stock": [FIRECAP, "blood_root", "dusk_crystal", "ember_heart"], "at": Vector2(96, 272), "variant": 6},
-	"fire_low": {"kind": "shelf", "stock": [WATERBLOOM, "ghost_moth", "slime_pearl", "silver_spore"], "at": Vector2(160, 376), "variant": 7},
-	"water_north": {"kind": "shelf", "stock": POTIONS, "at": Vector2(432, 112), "variant": 8},
-	"storage_west": {"kind": "storage", "at": Vector2(64, 360), "approach": Vector2(44, -30)},
-	"storage_south": {"kind": "storage", "at": Vector2(320, 376)},
-	"cauldron": {"kind": "cauldron", "at": Vector2(400, 272)},
+	"moon_west": {"kind": "shelf", "stock": [MOONLEAF, FIRECAP, WATERBLOOM], "at": Vector2(64, 120), "variant": 0},
+	"fire_north": {"kind": "shelf", "stock": ["void_eye", "blood_root", "ghost_moth"], "at": Vector2(88, 272), "variant": 1},
+	"water_east": {"kind": "shelf", "stock": ["bone_shard", "dusk_crystal", "slime_pearl"], "at": Vector2(552, 120), "variant": 2},
+	"moon_island": {"kind": "shelf", "stock": ["raven_feather", "ember_heart", "silver_spore"], "at": Vector2(192, 320), "variant": 3},
+	"fire_east": {"kind": "shelf", "stock": [MOONLEAF, "void_eye", "bone_shard", "raven_feather"], "at": Vector2(552, 264), "variant": 4},
+	"water_south": {"kind": "shelf", "stock": POTIONS, "at": Vector2(432, 80), "variant": 5, "display": true},
+	"moon_nook": {"kind": "shelf", "stock": [FIRECAP, "blood_root", "dusk_crystal", "ember_heart"], "at": Vector2(536, 376), "variant": 6},
+	"fire_low": {"kind": "shelf", "stock": [WATERBLOOM, "ghost_moth", "slime_pearl", "silver_spore"], "at": Vector2(72, 376), "variant": 7},
+	"water_north": {"kind": "shelf", "stock": POTIONS, "at": Vector2(192, 80), "variant": 8, "display": true},
+	"cauldron": {"kind": "cauldron", "at": Vector2(352, 272)},
 }
 ## Board rows of empty library furniture, in native 64x80 sprite coordinates.
 ## Runtime item nodes are anchored to these boards, independently of the wood art.
-const SHELF_ROWS := [[28, 50, 72], [32, 52, 72], [32, 52, 72], [30, 51, 72], [32, 52, 72], [48, 72], [30, 51, 72], [48, 72], [48, 72]]
+const SHELF_ROWS := [[42, 78, 116], [42, 78, 116], [42, 78, 116], [42, 78, 116], [42, 78, 116], [86, 116], [42, 78, 116], [74, 116], [86, 116]]
+const SHELF_MIRROR := [false, false, true, false, true, true, true, false, false]
+const SHELF_SIDEWAYS := [false, true, false, false, true, false, false, true, false]
+const SHELF_SCALE := 1.2
 const CLUTTER := {
-	"basket": {"at": Vector2(80, 408), "size": Vector2(56, 16), "variant": 0},
-	"books": {"at": Vector2(272, 340), "size": Vector2(40, 12), "variant": 1},
-	"bottles": {"at": Vector2(604, 338), "size": Vector2(44, 14), "variant": 2},
+	"books": {"at": Vector2(288, 368), "size": Vector2(40, 12), "variant": 1},
 }
 static var _polygons := {}
-const DOOR_ENTRY := Vector2(320, -18)
-const DOOR_POINT := Vector2(320, 32)
+const DOOR_ENTRY := Vector2(312, -38)
+const DOOR_POINT := Vector2(312, 12)
 const CUSTOMER_SPEED := 52.0
-const BROWSE_POINTS := [Vector2(136, 168), Vector2(272, 160), Vector2(496, 160), Vector2(488, 304), Vector2(224, 328), Vector2(400, 352), Vector2(112, 328), Vector2(304, 192)]
+const BROWSE_POINTS := [Vector2(120, 168), Vector2(248, 144), Vector2(496, 168), Vector2(488, 304), Vector2(240, 352), Vector2(416, 352), Vector2(128, 312), Vector2(304, 176)]
+const INVENTORY_CAPACITY := 8
 
 ## How close a player must stand to use a station, and the slack the authority
 ## adds because a Command is checked a few milliseconds after the pose it was
@@ -115,18 +114,18 @@ const REPUTATION_MAX := 100
 const REPUTATION_GAIN := 4
 const REPUTATION_LOSS := 6
 const MAX_CUSTOMERS := 4
-const ARRIVAL_BASE_SECONDS := 14.0
-const ARRIVAL_MIN_SECONDS := 8.0
+const FIRST_CUSTOMER_SECONDS := 8.0
+const ARRIVAL_BASE_SECONDS := 34.0
+const ARRIVAL_MIN_SECONDS := 20.0
 const ARRIVAL_SPEEDUP := 0.85
-const PATIENCE_BASE_SECONDS := 90.0
-const PATIENCE_MIN_SECONDS := 45.0
-const PATIENCE_SPEEDUP := 0.9
+const PATIENCE_BASE_SECONDS := 150.0
+const PATIENCE_MIN_SECONDS := 110.0
+const PATIENCE_SPEEDUP := 0.97
 ## How long an angry customer keeps standing there before they walk off.
 const ANGRY_SHOW_MSEC := 1200
 const SHELF_START_STOCK := 6
 const SHELF_RESTOCK := 4
 const SHELF_MAX_STOCK := 12
-const STORAGE_CAPACITY := 12
 
 ## How often the authority re-sends the Shop document even when nothing
 ## changed, so late joiners and a lossy network always catch up.
@@ -154,7 +153,7 @@ static func spawn_pose(seat: int, entity_id: int) -> Dictionary:
 ## The authority's bounds check: a finite point inside the room, inset by the
 ## player radius so a player centre can never sit in a wall.
 static func in_bounds(position: Vector2) -> bool:
-	return position.is_finite() and PLAY_BOUNDS.has_point(position)
+	return position.is_finite() and Geometry2D.is_point_in_polygon(position, PackedVector2Array(Cottage.FLOOR_POINTS))
 
 
 ## Rebuilds a pose with exactly the declared field types. Submitting a pose
@@ -218,7 +217,7 @@ static func station_point(station: String) -> Vector2:
 		return DOOR_POINT
 	var data: Dictionary = FURNITURE.get(station, {})
 	var anchor: Vector2 = data.get("at", Vector2.ZERO)
-	return anchor + (data.get("approach", Vector2(0, 28)) as Vector2)
+	return anchor + (data.get("approach", Vector2(0, 18) if station == "moon_nook" else Vector2(0, 28)) as Vector2)
 
 
 static func shelf_spot(raw: String) -> Vector2:
@@ -237,9 +236,16 @@ static func shelf_items(id: String) -> Array:
 static func shelf_slots(id: String) -> Array[Vector2]:
 	var result: Array[Vector2] = []
 	for row in SHELF_ROWS[int(FURNITURE[id]["variant"])]:
-		for x in [14, 32, 50]:
-			result.append(Vector2(x - 32, row - 80) * 1.5)
+		for x in [20, 40, 60]:
+			result.append((shelf_project(int(FURNITURE[id]["variant"]), Vector2(x, row)) - Vector2(40, 128)) * SHELF_SCALE)
 	return result
+
+static func shelf_project(variant: int, point: Vector2) -> Vector2:
+	var side: bool = SHELF_SIDEWAYS[variant]
+	var projected := Vector2(point.x * (0.55 if side else 0.82) + (18 if side else 10), point.y + point.x * (0.16 if side else 0.12) - (8 if side else 6))
+	if SHELF_MIRROR[variant]:
+		projected.x = 80 - projected.x
+	return projected
 
 
 static func furniture_rect(id: String) -> Rect2:
@@ -257,8 +263,12 @@ static func furniture_polygon(id: String) -> PackedVector2Array:
 	var data: Dictionary = FURNITURE.get(id, CLUTTER.get(id, {}))
 	var anchor: Vector2 = data["at"]
 	if data.get("kind", "") == "shelf":
-		for point in [Vector2(-42, -28), Vector2(42, -28), Vector2(42, 0), Vector2(-42, 0)]:
-			points.append(anchor + point)
+		var variant := int(data["variant"])
+		var left := shelf_project(variant, Vector2(10, 125))
+		var right := shelf_project(variant, Vector2(68, 125))
+		var depth := Vector2(-12 if SHELF_MIRROR[variant] else 12, -18)
+		for point in [left, right, right + depth, left + depth]:
+			points.append(anchor + (point - Vector2(40, 128)) * SHELF_SCALE)
 	elif data.get("kind", "") == "cauldron":
 		for point in [Vector2(-26, -42), Vector2(26, -42), Vector2(36, -26), Vector2(30, -4), Vector2(-30, -4), Vector2(-36, -26)]:
 			points.append(anchor + point)
@@ -273,6 +283,11 @@ static func furniture_polygon(id: String) -> PackedVector2Array:
 static func floor_clear(point: Vector2, radius: float = 10.0) -> bool:
 	if not in_bounds(point):
 		return false
+	var boundary := PackedVector2Array(Cottage.FLOOR_POINTS)
+	for i in boundary.size():
+		var nearest := Geometry2D.get_closest_point_to_segment(point, boundary[i], boundary[(i + 1) % boundary.size()])
+		if point.distance_to(nearest) < radius - 0.05:
+			return false
 	for id in FURNITURE.keys() + CLUTTER.keys():
 		var polygon := furniture_polygon(id)
 		if Geometry2D.is_point_in_polygon(point, polygon):
@@ -295,8 +310,10 @@ static func motion_clear(from: Vector2, to: Vector2, radius: float = PLAYER_RADI
 
 ## Seconds between customers on `day`: every day they come a little faster.
 static func arrival_interval(day: int) -> float:
-	var factor := pow(ARRIVAL_SPEEDUP, float(maxi(day - 1, 0)))
-	return maxf(ARRIVAL_BASE_SECONDS * factor, ARRIVAL_MIN_SECONDS)
+	return maxf(ARRIVAL_BASE_SECONDS - float(maxi(day - 1, 0)) * 3.0, ARRIVAL_MIN_SECONDS)
+
+static func customer_limit(day: int) -> int:
+	return clampi(day, 1, MAX_CUSTOMERS)
 
 
 ## Seconds a customer waits on `day` before giving up and leaving angry.

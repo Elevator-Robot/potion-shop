@@ -4,6 +4,7 @@ extends Node2D
 
 const Game = preload("res://network/game.gd")
 const CharacterAnimation = preload("res://client/character_animation.gd")
+const EmoteIcon = preload("res://client/emote_icon.gd")
 
 const BAR_WIDTH := 40.0
 const BAR_FULL := Color(0.42, 0.85, 0.45, 1.0)
@@ -36,6 +37,10 @@ var _look_facing := PI / 2.0
 @onready var bar_fill: ColorRect = $BarFill
 @onready var angry_mark: Label = $AngryMark
 var _request_tween: Tween
+var _emote: Sprite2D
+var _last_phase := ""
+var _speech: PanelContainer
+var _speech_label: Label
 
 func emphasize_request(wrong: bool) -> void:
 	if _request_tween != null:
@@ -45,10 +50,39 @@ func emphasize_request(wrong: bool) -> void:
 	_request_tween = create_tween().set_parallel(true)
 	_request_tween.tween_property($OrderBubble, "scale", Vector2.ONE, 0.6)
 	_request_tween.tween_property($OrderBubble, "modulate", Color.WHITE, 0.6)
+	if _emote != null:
+		_emote.show_emote(1 if wrong else 4, 1.1)
 
 
 func _ready() -> void:
 	animation.idle_durations = Vector4(1.2, 0.3, 0.12, 0.3)
+	_emote = EmoteIcon.new()
+	add_child(_emote)
+	_emote.position = Vector2(24, -40)
+	_speech = PanelContainer.new()
+	_speech.position = Vector2(-70, -100)
+	_speech.z_index = 9
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("f1dfbd")
+	style.border_color = Color("745867")
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	_speech.add_theme_stylebox_override("panel", style)
+	_speech_label = Label.new()
+	_speech_label.add_theme_color_override("font_color", Color("392f46"))
+	_speech_label.add_theme_font_size_override("font_size", 12)
+	_speech.add_child(_speech_label)
+	add_child(_speech)
+	var tail := Polygon2D.new()
+	tail.polygon = PackedVector2Array([Vector2(12,-69),Vector2(22,-69),Vector2(17,-58)])
+	tail.color = Color("f1dfbd")
+	tail.name = "SpeechTail"
+	tail.z_index = 9
+	add_child(tail)
 
 
 func follow_snapshot(state: Dictionary) -> void:
@@ -58,11 +92,25 @@ func follow_snapshot(state: Dictionary) -> void:
 		position = _target
 		_positioned = true
 	var leaving: bool = state.get("phase", "") == "leaving"
-	order_icon.visible = not leaving
-	$OrderBubble.visible = not leaving or bool(state.get("served", false))
+	var phase := str(state.get("phase", ""))
+	if phase != _last_phase:
+		_last_phase = phase
+		if leaving and bool(state.get("served", false)):
+			_emote.show_emote(0, 2.5)
+		elif phase == "waiting":
+			_emote.show_emote(2, 1.1)
+	var thinking := not leaving and phase not in ["talking", "chatting"] and posmod(int(Time.get_ticks_msec() / 1000) + customer_id * 7, 24) < 3
+	order_icon.visible = thinking
+	$OrderBubble.visible = thinking
+	$OrderBubble.frame = int(Time.get_ticks_msec() / 400) % 4
+	_speech.visible = not leaving and bool(state.get("speaking", false))
+	$SpeechTail.visible = _speech.visible
+	_speech_label.text = str(state.get("speech", ""))
 	$BarBg.visible = not leaving
 	bar_fill.visible = not leaving
-	order_label.visible = leaving and bool(state.get("served", false))
+	if bool(state.get("patience_paused", false)):
+		bar_fill.color = Color("93cdd5")
+	order_label.visible = false
 	order_label.text = "♥"
 
 

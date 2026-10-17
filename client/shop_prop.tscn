@@ -16,6 +16,11 @@ centered = false
 texture_filter = 1
 visible = false
 
+[node name="Decor" type="Sprite2D" parent="."]
+centered = false
+texture_filter = 1
+visible = false
+
 [node name="Cue" type="Label" parent="."]
 visible = false
 text = "E"
