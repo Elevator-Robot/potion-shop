@@ -4,24 +4,22 @@ extends Node2D
 ## is always a newer pose to glide to.
 
 const Game = preload("res://network/game.gd")
+const CharacterAnimation = preload("res://client/character_animation.gd")
 
 ## How far behind the authority's acceptance time we draw other players, in
 ## seconds.
 const VIEW_DELAY := 0.1
 
 ## Where the carried item rides above their head, in screen space.
-const HELD_ABOVE := Vector2(0.0, -54.0)
+const HELD_ABOVE := Vector2(0.0, -66.0)
 
-## The same selectable static portraits used by the local player.
+## The same authored animation sheets used by the local player.
 const CHARACTERS := {
-	0: preload("res://assets/characters/elf.png"),
-	1: preload("res://assets/characters/potionmaker.png"),
+	0: preload("res://assets/characters/elf_adventurer.png"),
+	1: preload("res://assets/characters/purple_shopkeeper/sheet.png"),
 }
 ## Match the local player's readable height without changing its feet footprint.
-const ART_HEIGHT := 48.0
-## The art's centre, half its on-screen height above the body origin, so the
-## character's feet stay on the player's spot however the body is turned.
-const ART_ABOVE := Vector2(0.0, -ART_HEIGHT * 0.5)
+const ART_HEIGHT := 60.0
 
 ## Their seat, so main.gd can look up what they are carrying in the snapshot.
 var seat := -1
@@ -30,6 +28,7 @@ var seat := -1
 var carrying := ""
 var _samples: Array = []    # [time, position, facing] per received pose
 var _tinted := -1
+var animation := CharacterAnimation.new()
 
 @onready var sprite: Sprite2D = $Sprite
 @onready var held: Node2D = $Held
@@ -66,27 +65,16 @@ func _tint(seat_number: int) -> void:
 func _use_character(seat_number: int) -> void:
 	var art: Texture2D = CHARACTERS.get(seat_number, CHARACTERS[0])
 	sprite.texture = art
-	var native := art.get_size().y
-	if native > 0.0:
-		# Downscale the supplied large portraits; use integer steps if enlarging.
-		var factor := ART_HEIGHT / native
-		if factor > 1.0:
-			factor = pow(2.0, floor(log(factor) / log(2.0)))
-		sprite.scale = Vector2.ONE * factor
-		print("POTIONSHOP_CHARACTER seat=%d art=%dx%d scale=%.4f tall=%.1f" % [seat_number, int(art.get_size().x), int(native), factor, native * factor])
+	sprite.hframes = 4
+	sprite.vframes = 2
+	sprite.frame = 0
+	animation.idle_durations = Vector4(1.2, 0.3, 0.12, 0.3) if seat_number == 1 else Vector4(0.2, 0.2, 0.2, 0.2)
 	_face_art()
 
 
-## A single front-facing pose is never rotated with the body: the art stays
-## upright, keeps its feet on the player's spot, and only leans by flipping
-## towards the way they are walking.
+## Animate the original artwork without rotating it with the player's body.
 func _face_art() -> void:
-	var upright := -rotation
-	sprite.rotation = upright
-	sprite.position = ART_ABOVE.rotated(upright)
-	var lean := Vector2.RIGHT.rotated(rotation).x
-	if absf(lean) > 0.25:
-		sprite.flip_h = lean < 0.0
+	animation.apply(sprite, rotation, ART_HEIGHT)
 
 
 ## Draws what they are carrying: main.gd reads it out of the authority's Shop
@@ -118,9 +106,15 @@ func _place() -> void:
 		_place_held()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	var previous := global_position
+	_update_pose()
+	animation.advance(delta, previous.distance_to(global_position))
+	_place()
+
+
+func _update_pose() -> void:
 	if _samples.is_empty():
-		_place()
 		return
 	var at := Time.get_ticks_usec() / 1000000.0 - VIEW_DELAY
 	var newest: Array = _samples[-1]
@@ -128,7 +122,6 @@ func _process(_delta: float) -> void:
 	if at >= float(newest[0]) or _samples.size() == 1:
 		global_position = newest_position
 		rotation = float(newest[2])
-		_place()
 		return
 	for i in range(_samples.size() - 1, 0, -1):
 		var a: Array = _samples[i - 1]
@@ -140,8 +133,6 @@ func _process(_delta: float) -> void:
 			var to: Vector2 = b[1]
 			global_position = from.lerp(to, t)
 			rotation = lerp_angle(float(a[2]), float(b[2]), t)
-			_place()
 			return
 	var oldest: Vector2 = _samples[0][1]
 	global_position = oldest
-	_place()

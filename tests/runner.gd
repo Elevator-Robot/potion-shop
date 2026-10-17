@@ -50,10 +50,21 @@ func _basic() -> void:
 	add_child(shop)
 	await get_tree().process_frame
 	var player: CharacterBody2D = shop.get_node("Entities/1")
-	_check(player.get_node("Sprite").texture.resource_path == "res://assets/characters/potionmaker.png", "solo uses chosen sprite rather than seat default")
+	_check(player.get_node("Sprite").texture.resource_path == "res://assets/characters/purple_shopkeeper/sheet.png", "solo uses chosen sprite rather than seat default")
 	var before := player.position
+	var purple: Sprite2D = player.get_node("Sprite")
+	_check(purple.frame == 0, "purple character begins in relaxed pose")
+	await get_tree().create_timer(1.25).timeout
+	_check(purple.frame == 1, "purple character advances to drawn inhale frame")
+	# Observe the short blink rather than assuming timer and physics callbacks
+	# land on exactly the same frame under different headless frame rates.
+	var blink_deadline := Time.get_ticks_msec() + 600
+	while purple.frame != 2 and Time.get_ticks_msec() < blink_deadline:
+		await get_tree().process_frame
+	_check(purple.frame == 2, "purple character briefly uses drawn blink frame")
 	_key(KEY_W, true)
 	await get_tree().create_timer(0.25).timeout
+	_check(player.animation.walk_amount > 0.5 and purple.frame >= 4, "walking uses purple character's drawn step frames")
 	_key(KEY_W, false)
 	await get_tree().create_timer(0.15).timeout
 	_check(player.position.y < before.y - 10.0, "W keyboard input moves local character")
@@ -64,6 +75,8 @@ func _basic() -> void:
 	_key(KEY_RIGHT, false)
 	await get_tree().create_timer(0.1).timeout
 	_check(player.position.x > before.x + 10.0, "arrow keyboard input moves local character")
+	await get_tree().create_timer(0.3).timeout
+	_check(player.animation.walk_amount < 0.05, "stopped character returns to idle")
 	for code in [KEY_A, KEY_D, KEY_W, KEY_S, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_E, KEY_SPACE]:
 		var action: StringName = {
 			KEY_A: &"move_left", KEY_D: &"move_right", KEY_W: &"move_up", KEY_S: &"move_down",
@@ -74,11 +87,45 @@ func _basic() -> void:
 		_check(Input.is_action_pressed(action), "keyboard mapping for " + OS.get_keycode_string(code))
 		_key(code, false)
 	_check(shop.seat == 0 and shop.shop.has("coins"), "solo scene receives seat and shop")
+	var queue: Node2D = shop.get_node("Room/Queue/Customers")
+	var customers := [
+		{"id": 1, "order": Game.HEALING_POTION, "patience_seconds": 10.0, "angry": true},
+		{"id": 2, "order": Game.MANA_POTION, "patience_seconds": 10.0, "angry": false},
+	]
+	queue.apply(customers, [0.0, 8.0])
+	var first: Node2D = queue.get_child(0)
+	var second: Node2D = queue.get_child(1)
+	var second_texture: Texture2D = second.get_node("Sprite").texture
+	_check(first.get_node("Sprite").texture != second_texture, "customers have distinct sprite assets")
+	_check(first.get_node("AngryMark").visible, "angry customer keeps visible feedback")
+	customers.remove_at(0)
+	queue.apply(customers, [8.0])
+	_check(first.get_node("Sprite").texture == second_texture, "appearance follows customer ID after queue shifts")
+	_check(not first.get_node("AngryMark").visible and not second.visible, "reused queue slot clears old anger and hides unused customer")
+	shop.queue_free()
+	await get_tree().process_frame
+	Session.selected_character = 0
+	Session.solo()
+	shop = preload("res://client/main.tscn").instantiate()
+	add_child(shop)
+	await get_tree().process_frame
+	player = shop.get_node("Entities/1")
+	var elf: Sprite2D = player.get_node("Sprite")
+	var idle_frame := elf.frame
+	await get_tree().create_timer(0.25).timeout
+	_check(elf.frame < 4 and elf.frame != idle_frame, "elf cycles authored idle frames")
+	_key(KEY_D, true)
+	await get_tree().create_timer(0.2).timeout
+	_check(elf.frame >= 4 and elf.frame < 8, "elf uses walking frames during movement")
+	_key(KEY_D, false)
+	await get_tree().create_timer(0.3).timeout
+	_check(elf.frame < 4, "elf returns to idle frames after stopping")
 	shop.queue_free()
 	await get_tree().process_frame
 
 
 func _host(port: int, ready_file: String) -> void:
+	Session.selected_character = 0
 	_check(Session.host(port) == OK, "host listens")
 	if not Session.active:
 		return
@@ -134,8 +181,8 @@ func _client(port: int) -> void:
 	_check(shop.get_node("Entities").get_child_count() == 2, "client scene creates owner and observer")
 	_check(shop.seat == 1, "client scene owns second seat")
 	var local: Node = shop.get_node("Entities/" + str(multiplayer.get_unique_id()))
-	_check(local.get_node("Sprite").texture.resource_path == "res://assets/characters/potionmaker.png", "client uses chosen portrait")
-	_check(shop.get_node("Entities/1/Sprite").texture.resource_path == "res://assets/characters/elf.png", "observer uses host portrait")
+	_check(local.get_node("Sprite").texture.resource_path == "res://assets/characters/purple_shopkeeper/sheet.png", "client uses chosen purple character sheet")
+	_check(shop.get_node("Entities/1/Sprite").texture.resource_path == "res://assets/characters/elf_adventurer.png", "observer uses host elf sheet")
 	await get_tree().create_timer(0.2).timeout
 	shop.queue_free()
 	await get_tree().process_frame

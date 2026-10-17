@@ -27,4 +27,4 @@ func apply(entries: Array, remaining: Array) -> void:
 		customer.position = Game.QUEUE_SLOTS[mini(i, Game.QUEUE_SLOTS.size() - 1)]
 		var entry: Dictionary = entries[i]
 		var total := maxf(float(entry.get("patience_seconds", 1.0)), 0.001)
-		customer.show_customer(str(entry.get("order", "")), float(remaining[i]) / total, bool(entry.get("angry", false)))
+		customer.show_customer(int(entry.get("id", 0)), str(entry.get("order", "")), float(remaining[i]) / total, bool(entry.get("angry", false)))

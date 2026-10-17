@@ -1,8 +1,8 @@
 extends Control
 
 const PORTRAITS := [
-	preload("res://assets/characters/elf.png"),
-	preload("res://assets/characters/potionmaker.png"),
+	preload("res://assets/characters/elf_adventurer_preview.tres"),
+	preload("res://assets/characters/purple_shopkeeper/preview.tres"),
 ]
 
 @onready var address: LineEdit = %Address

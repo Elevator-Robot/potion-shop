@@ -4,22 +4,20 @@ extends CharacterBody2D
 ## Flat top-down walking: no gravity, no jumping, no y velocity.
 
 const Game = preload("res://network/game.gd")
+const CharacterAnimation = preload("res://client/character_animation.gd")
 
 ## Where the carried item rides above our head, in screen space: the shop is
 ## top-down, so "up" is -y whatever way we are facing.
-const HELD_ABOVE := Vector2(0.0, -54.0)
+const HELD_ABOVE := Vector2(0.0, -66.0)
 
-## The two selectable portraits. Both are static poses, not walk-cycle sheets.
+## Authored idle/walk sheets for both selectable characters.
 const CHARACTERS := {
-	0: preload("res://assets/characters/elf.png"),
-	1: preload("res://assets/characters/potionmaker.png"),
+	0: preload("res://assets/characters/elf_adventurer.png"),
+	1: preload("res://assets/characters/purple_shopkeeper/sheet.png"),
 }
 ## Readable character height in world pixels; keep the small feet collision
 ## footprint so the character can still walk through the shop's narrow aisles.
-const ART_HEIGHT := 48.0
-## The art's centre, half its on-screen height above the body origin, so the
-## character's feet stay on the player's spot however the body is turned.
-const ART_ABOVE := Vector2(0.0, -ART_HEIGHT * 0.5)
+const ART_HEIGHT := 60.0
 
 var seat := -1
 var facing := Game.SPAWN_FACING
@@ -30,6 +28,7 @@ var _pose := {}          # the full pose; only position and facing ever change
 var _sent := {}
 var _send_elapsed := 0.0
 var _tinted := -1
+var animation := CharacterAnimation.new()
 
 @onready var sprite: Sprite2D = $Sprite
 @onready var held: Node2D = $Held
@@ -75,27 +74,16 @@ func _tint(seat_number: int) -> void:
 func _use_character(seat_number: int) -> void:
 	var art: Texture2D = CHARACTERS.get(seat_number, CHARACTERS[0])
 	sprite.texture = art
-	var native := art.get_size().y
-	if native > 0.0:
-		# Downscale the supplied large portraits; use integer steps if enlarging.
-		var factor := ART_HEIGHT / native
-		if factor > 1.0:
-			factor = pow(2.0, floor(log(factor) / log(2.0)))
-		sprite.scale = Vector2.ONE * factor
-		print("POTIONSHOP_CHARACTER seat=%d art=%dx%d scale=%.4f tall=%.1f" % [seat_number, int(art.get_size().x), int(native), factor, native * factor])
+	sprite.hframes = 4
+	sprite.vframes = 2
+	sprite.frame = 0
+	animation.idle_durations = Vector4(1.2, 0.3, 0.12, 0.3) if seat_number == 1 else Vector4(0.2, 0.2, 0.2, 0.2)
 	_face_art()
 
 
-## A single front-facing pose is never rotated with the body: the art stays
-## upright, keeps its feet on the player's spot, and only leans by flipping
-## towards the way we are walking.
+## Keep the artwork upright while applying idle breathing or walking motion.
 func _face_art() -> void:
-	var upright := -rotation
-	sprite.rotation = upright
-	sprite.position = ART_ABOVE.rotated(upright)
-	var lean := Vector2.RIGHT.rotated(rotation).x
-	if absf(lean) > 0.25:
-		sprite.flip_h = lean < 0.0
+	animation.apply(sprite, rotation, ART_HEIGHT)
 
 
 func _physics_process(delta: float) -> void:
@@ -103,7 +91,9 @@ func _physics_process(delta: float) -> void:
 		return
 	var input := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
 	velocity = input * Game.WALK_SPEED
+	var previous := global_position
 	move_and_slide()
+	animation.advance(delta, previous.distance_to(global_position))
 	if input != Vector2.ZERO:
 		facing = atan2(input.y, input.x)
 		rotation = facing

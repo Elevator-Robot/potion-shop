@@ -14,7 +14,7 @@ const DEFAULT_PORT := 24567
 
 var active := false
 ## Appearance choice persists when returning to the menu; the host validates it.
-var selected_character := 0
+var selected_character := 1
 var local_seat := -1
 var players := {}
 var document := {}

@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://client/player_owner.gd" id="1_owner"]
-[ext_resource type="Texture2D" path="res://assets/characters/elf.png" id="2_art"]
+[ext_resource type="Texture2D" path="res://assets/characters/elf_adventurer.png" id="2_art"]
 
 [sub_resource type="CircleShape2D" id="Shape_body"]
 radius = 10.0
@@ -13,7 +13,10 @@ script = ExtResource("1_owner")
 shape = SubResource("Shape_body")
 
 [node name="Sprite" type="Sprite2D" parent="."]
-position = Vector2(0, -16)
+position = Vector2(0, -30)
+scale = Vector2(3, 3)
+hframes = 4
+vframes = 2
 texture_filter = 1
 texture = ExtResource("2_art")
 
