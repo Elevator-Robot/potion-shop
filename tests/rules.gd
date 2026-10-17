@@ -32,6 +32,9 @@ func run() -> Array[String]:
 	server.leave(1)
 	_check(server.shop.held(0) == "", "disconnect releases carried item")
 	_check(server.join(99), "freed seat can rejoin")
+	server.leave(99)
+	_check(server.join(99, 999), "out-of-range character choice handled")
+	_check(int(server.players[99]["character"]) == 1, "character choice constrained to existing sprites")
 
 	for potion in Game.POTIONS:
 		server = Authority.new()

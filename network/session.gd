@@ -13,6 +13,8 @@ const Authority = preload("res://authority/main.gd")
 const DEFAULT_PORT := 24567
 
 var active := false
+## Appearance choice persists when returning to the menu; the host validates it.
+var selected_character := 0
 var local_seat := -1
 var players := {}
 var document := {}
@@ -34,7 +36,7 @@ func _ready() -> void:
 func solo() -> void:
 	close()
 	authority = Authority.new()
-	authority.join(1)
+	authority.join(1, selected_character)
 	_publish()
 
 
@@ -48,7 +50,7 @@ func host(port: int = DEFAULT_PORT) -> Error:
 	multiplayer.multiplayer_peer = peer
 	_online = true
 	authority = Authority.new()
-	authority.join(1)
+	authority.join(1, selected_character)
 	_publish()
 	return OK
 
@@ -88,15 +90,15 @@ func _fail(message: String) -> void:
 
 
 func _connected() -> void:
-	_request_join.rpc_id(1)
+	_request_join.rpc_id(1, selected_character)
 
 
 @rpc("any_peer", "call_remote", "reliable")
-func _request_join() -> void:
+func _request_join(character: int) -> void:
 	if authority == null:
 		return
 	var peer := multiplayer.get_remote_sender_id()
-	if authority.join(peer):
+	if authority.join(peer, character):
 		_publish()
 	else:
 		_rejected.rpc_id(peer, "The shop is full.")

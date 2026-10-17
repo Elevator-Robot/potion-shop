@@ -17,7 +17,7 @@ var refilled_at := {}
 var receipts := {} # peer id -> last command id and result
 
 
-func join(peer: int) -> bool:
+func join(peer: int, character: int = -1) -> bool:
 	if players.has(peer):
 		return true
 	if players.size() >= Game.MAX_PLAYERS:
@@ -28,6 +28,7 @@ func join(peer: int) -> bool:
 	for seat in Game.MAX_PLAYERS:
 		if seat not in taken:
 			players[peer] = Game.spawn_pose(seat, peer)
+			players[peer]["character"] = seat if character < 0 else clampi(character, 0, 1)
 			allowance[peer] = BURST
 			refilled_at[peer] = Time.get_ticks_msec()
 			return true

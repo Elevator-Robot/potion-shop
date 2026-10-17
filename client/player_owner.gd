@@ -7,19 +7,16 @@ const Game = preload("res://network/game.gd")
 
 ## Where the carried item rides above our head, in screen space: the shop is
 ## top-down, so "up" is -y whatever way we are facing.
-const HELD_ABOVE := Vector2(0.0, -34.0)
+const HELD_ABOVE := Vector2(0.0, -54.0)
 
-## One front-facing character per seat: seat 0 is the elf (P1) and seat 1 is the
-## robed potion maker (P2). The art is a single static pose, so a texture is all
-## each seat needs - there is no walk cycle to play.
+## The two selectable portraits. Both are static poses, not walk-cycle sheets.
 const CHARACTERS := {
 	0: preload("res://assets/characters/elf.png"),
 	1: preload("res://assets/characters/potionmaker.png"),
 }
-## How tall the character art stands on screen, in pixels: roughly a 32x32
-## footprint in a 640x420 room. The art is drawn far larger, so it is shrunk by
-## the sprite's whole-number scale rather than scaled up.
-const ART_HEIGHT := 32.0
+## Readable character height in world pixels; keep the small feet collision
+## footprint so the character can still walk through the shop's narrow aisles.
+const ART_HEIGHT := 48.0
 ## The art's centre, half its on-screen height above the body origin, so the
 ## character's feet stay on the player's spot however the body is turned.
 const ART_ABOVE := Vector2(0.0, -ART_HEIGHT * 0.5)
@@ -63,11 +60,10 @@ func _adopt(state: Dictionary) -> void:
 	_pose = Game.pose_from(state)
 	_sent = _pose.duplicate()
 	seat = int(_pose["seat"])
-	_tint(seat)
+	_tint(int(_pose["character"]))
 
 
-## Picks the seat's character art. The flat placeholder tint is gone: the art
-## itself says who is who, so nothing is ever drawn over the sprite.
+## Apply the selected character art without tinting the supplied texture.
 func _tint(seat_number: int) -> void:
 	if seat_number == _tinted:
 		return
@@ -75,16 +71,13 @@ func _tint(seat_number: int) -> void:
 	_use_character(seat_number)
 
 
-## Draws the seat's character, sized to stand ART_HEIGHT tall on screen with a
-## whole-number scale factor, and kept upright.
+## Draws the seat's character at a consistent height, preserving its aspect ratio.
 func _use_character(seat_number: int) -> void:
 	var art: Texture2D = CHARACTERS.get(seat_number, CHARACTERS[0])
 	sprite.texture = art
 	var native := art.get_size().y
 	if native > 0.0:
-		# The reference art is drawn far larger than a 32 px character, so the
-		# factor normally shrinks it (1/2, 1/4, 1/8 ...). Art smaller than the
-		# target is doubled up in whole steps, which keeps its pixels square.
+		# Downscale the supplied large portraits; use integer steps if enlarging.
 		var factor := ART_HEIGHT / native
 		if factor > 1.0:
 			factor = pow(2.0, floor(log(factor) / log(2.0)))

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420">
+  <defs>
+    <linearGradient id="wood" x2="0" y2="1">
+      <stop stop-color="#a87847"/><stop offset=".15" stop-color="#92633c"/>
+      <stop offset=".8" stop-color="#78502f"/><stop offset="1" stop-color="#61402b"/>
+    </linearGradient>
+    <pattern id="boards" width="240" height="80" patternUnits="userSpaceOnUse">
+      <path fill="#392c25" d="M0 0h240v80H0z"/>
+      <path fill="url(#wood)" d="M1 1h155v37H1zM159 1h80v37h-80zM1 41h71v37H1zM75 41h164v37H75z"/>
+      <path fill="#c7965b" opacity=".17" d="M1 41h71v37H1zM159 1h80v37h-80z"/>
+      <g fill="none" stroke-linecap="round">
+        <path stroke="#d0a16a" opacity=".36" d="M4 3h148m10 0h73M4 43h64m11 0h156M8 13c31-5 55 6 89 0s43-3 53-2m20 8h61M8 51c19 6 40-4 59 1m15 9c34-7 62 6 94-2s37-3 54-3"/>
+        <path stroke="#4d3426" opacity=".38" d="M7 31c34-5 54 1 86-3s43 4 56 0m17 1h64M7 70c16-5 38 5 59-1m18 5c23-5 53 0 80-2s43-5 66-1M7 20c21 3 36-4 52 0s29 1 43-1m6 0h41"/>
+        <ellipse cx="119" cy="19" rx="13" ry="3.5" stroke="#573b29" opacity=".48"/>
+        <ellipse cx="119" cy="19" rx="5" ry="1.5" stroke="#472f23" opacity=".65"/>
+        <path stroke="#382d28" d="M6 7v2m145-2v2m14-2v2m68-2v2M7 47v2m59-2v2m15-2v2m151-2v2"/>
+      </g>
+    </pattern>
+    <radialGradient id="shade" r=".73">
+      <stop offset=".35" stop-color="#161e26" stop-opacity="0"/>
+      <stop offset="1" stop-color="#161e26" stop-opacity=".45"/>
+    </radialGradient>
+  </defs>
+  <path fill="url(#boards)" d="M0 0h640v420H0z"/>
+  <path fill="url(#shade)" d="M0 0h640v420H0z"/>
+  <path fill="none" stroke="#342c27" stroke-width="8" d="M4 4h632v412H4z"/>
+  <path fill="none" stroke="#ba8b54" stroke-opacity=".5" stroke-width="2" d="M10 10h620v400H10z"/>
+</svg>

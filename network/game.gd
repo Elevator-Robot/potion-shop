@@ -13,10 +13,9 @@ const PLAYER_RADIUS := 10.0
 ## Where a player centre may legally be: the interior inset by the player
 ## radius (10, 10 to 630, 410).
 const PLAY_BOUNDS := Rect2(10.0, 10.0, 620.0, 400.0)
-## Everything the fixed camera frames: the room, its walls, and the customer
-## queue band below the serving counter (672 = 640 + 2 * 16, 516 = 420 + 2 * 16
-## + 64 of queue).
-const CAMERA_RECT := Rect2(-16.0, -16.0, 672.0, 516.0)
+## Frame the raised stone back wall, cutaway sides and the customer queue below
+## the shop. This visual framing does not change the playable room bounds.
+const CAMERA_RECT := Rect2(-48.0, -112.0, 736.0, 640.0)
 
 const WALK_SPEED := 120.0     # px/s, flat top-down 8-direction walking
 const MAX_SPEED := 240.0      # the authority's sanity bound, above WALK_SPEED
@@ -153,6 +152,7 @@ static func spawn_pose(seat: int, entity_id: int) -> Dictionary:
 	return {
 		"entity": entity_id,
 		"seat": seat,
+		"character": seat,
 		"position": spawn_point(seat),
 		"facing": SPAWN_FACING,
 	}
@@ -172,6 +172,7 @@ static func pose_from(state: Dictionary) -> Dictionary:
 	return {
 		"entity": int(state.get("entity", -1)),
 		"seat": int(state.get("seat", -1)),
+		"character": int(state.get("character", state.get("seat", 0))),
 		"position": position_value if position_value is Vector2 else Vector2.ZERO,
 		"facing": float(state.get("facing", 0.0)),
 	}

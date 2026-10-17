@@ -15,6 +15,10 @@ returns to the menu. A disconnected remote player releases their seat and held
 item. A rejoin receives a fresh seat and the ongoing shop snapshot. Host loss ends
 play; the client displays an explanation and can return to the menu.
 
+The menu stores a local character choice. Joining sends that choice to the host,
+which bounds it to the two available portraits and includes it in the player pose.
+Appearance is independent of seat; both players may choose the same portrait.
+
 ## State ownership
 
 - `authority/main.gd` is a RefCounted host-side rules object. It maps authenticated

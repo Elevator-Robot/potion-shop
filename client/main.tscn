@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://cwflo3c2r2aj2" path="res://client/main.gd" id="1_main"]
 [ext_resource type="Script" uid="uid://2dlsg0080io5" path="res://client/queue_view.gd" id="2_queue"]
 [ext_resource type="PackedScene" path="res://client/hud.tscn" id="3_hud"]
+[ext_resource type="PackedScene" path="res://client/shop_environment.tscn" id="4_environment"]
 
 [sub_resource type="RectangleShape2D" id="Shape_wall_h"]
 size = Vector2(672, 16)
@@ -33,21 +34,7 @@ script = ExtResource("1_main")
 
 [node name="Room" type="Node2D" parent="." unique_id=160729834]
 
-[node name="WallFrame" type="Polygon2D" parent="Room" unique_id=1715900808]
-color = Color(0.26, 0.19, 0.14, 1)
-polygon = PackedVector2Array(-16, -16, 656, -16, 656, 436, -16, 436)
-
-[node name="Floor" type="Polygon2D" parent="Room" unique_id=680348848]
-color = Color(0.48, 0.35, 0.25, 1)
-polygon = PackedVector2Array(0, 0, 640, 0, 640, 420, 0, 420)
-
-[node name="FloorPlankA" type="Polygon2D" parent="Room" unique_id=287515356]
-color = Color(0.44, 0.32, 0.23, 1)
-polygon = PackedVector2Array(0, 118, 640, 118, 640, 122, 0, 122)
-
-[node name="FloorPlankB" type="Polygon2D" parent="Room" unique_id=1104577865]
-color = Color(0.44, 0.32, 0.23, 1)
-polygon = PackedVector2Array(0, 278, 640, 278, 640, 282, 0, 282)
+[node name="Environment" parent="Room" instance=ExtResource("4_environment")]
 
 [node name="Walls" type="StaticBody2D" parent="Room" unique_id=1933698739]
 

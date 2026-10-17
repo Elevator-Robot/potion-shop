@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="88" height="100" viewBox="0 0 88 100">
+  <defs>
+    <linearGradient id="frame" x2=".9" y2="1"><stop stop-color="#d4c7a4"/><stop offset=".45" stop-color="#90978c"/><stop offset="1" stop-color="#4f6164"/></linearGradient>
+    <linearGradient id="pane" x2="0" y2="1"><stop stop-color="#7ac3c9"/><stop offset="1" stop-color="#224e73"/></linearGradient>
+    <clipPath id="arch"><path d="M17 84V43Q17 19 44 9q27 10 27 34v41z"/></clipPath>
+  </defs>
+  <path fill="#182d38" opacity=".6" d="M7 97V44Q7 13 44 0q37 13 37 44v53z"/>
+  <path fill="url(#frame)" stroke="#303f46" stroke-width="2" d="M10 89V43Q10 14 44 3q34 11 34 40v46z"/>
+  <path fill="url(#pane)" stroke="#263748" stroke-width="3" d="M17 84V43Q17 19 44 9q27 10 27 34v41z"/>
+  <g clip-path="url(#arch)" stroke="#283e52" stroke-width="2" stroke-linejoin="round">
+    <path fill="#a999d4" d="M44 8L29 26 44 40 59 26z"/>
+    <path fill="#eed58b" d="M44 15l8 11-8 9-8-9z"/>
+    <path fill="#519db9" d="M17 16l12 10-12 18zM71 16L59 26l12 18z"/>
+    <path fill="#68b6ad" d="M17 44l12-18 15 14-14 19zM71 44L59 26 44 40l14 19z"/>
+    <path fill="#bd87a4" d="M17 44l13 15-13 25zM71 44L58 59l13 25z"/>
+    <path fill="#827ec1" d="M17 84l13-25 14 25zM71 84L58 59 44 84z"/>
+    <path fill="#c6ddb2" d="M44 40l14 19-14 25-14-25z"/>
+    <path fill="#e0b76b" d="M37 40h14v6h-3v9l9 13q3 8-6 9H37q-9-1-6-9l9-13v-9h-3z"/>
+    <path fill="#4fae9e" d="M36 63h16l5 7q1 6-6 7H37q-7-1-6-7z"/>
+    <path fill="none" stroke="#f6df9e" stroke-width="1" d="M36 68l-2 3m9-23v7"/>
+  </g>
+  <g fill="none" stroke="#e4d8b7" stroke-opacity=".6"><path d="M13 82V43Q13 18 44 6q31 12 31 37v39M22 24l-6-5m11-1l-5-6m15 1l-3-6m20 6l3-6m6 11l5-6m-2 12l6-5"/></g>
+  <path fill="#364650" d="M6 87h76v10H6z"/>
+  <path fill="#9da18e" stroke="#43555c" d="M5 86h78l-4 7H9z"/>
+  <path stroke="#dfd3a9" d="M9 87h70"/>
+</svg>

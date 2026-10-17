@@ -73,6 +73,8 @@ def main():
     args = parser.parse_args()
     run("Godot import and script compilation", ["--editor", "--import"])
     run("main menu boot", ["--quit-after", "20"])
+    run("menu mouse click", ["--script", "res://tests/menu_input.gd"], True)
+    run("menu keyboard activation", ["--script", "res://tests/menu_input.gd", "--", "--keyboard"], True)
     run("menu-to-solo launch", ["--quit-after", "30", "--", "--solo"])
     run("direct shop scene (F6)", ["res://client/main.tscn", "--quit-after", "30"])
     run("shop rules, resource loading, and solo input", ["tests/runner.tscn"], True)

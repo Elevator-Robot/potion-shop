@@ -6,14 +6,18 @@ before their patience runs out. Earn coins and maintain the shop's reputation.
 
 ## Current design
 
+- Environment: warm oak floorboards, cool stone walls, and three arched stained-glass
+  windows with potion motifs and colored light across the floor. The back wall is
+  shown at full height; side/front walls are cut away for a clear view of gameplay.
 - One shared shop with shelves, storage, prep table, cauldron, bottling station,
   and serving counter.
 - Three recipes: Healing Potion, Mana Potion, and Ember Tonic.
 - One carried item per player; cooperative use of shared stations and supplies.
 - Days last 120 seconds; customer pressure grows and shelves restock each day.
 - Movement: WASD/arrows. Interact: E/Space; hold for chopping. Esc leaves the shop.
-- Existing elf and potion-maker sprites identify the two seats. They are static
-  artwork, not animated sprite sheets. Character selection is a future feature.
+- Choose Blue Witch (`elf.png`) or Purple Shopkeeper (`potionmaker.png`) in the
+  menu, for solo or co-op. Both use the existing static artwork at 48 world pixels
+  tall, stay upright, and flip toward horizontal movement. There are no walk-cycle sheets.
 
 ## Development workflow
 

@@ -44,18 +44,35 @@ func _basic() -> void:
 		if scene != null:
 			var instance := scene.instantiate()
 			instance.free()
+	Session.selected_character = 1
 	Session.solo()
 	var shop := preload("res://client/main.tscn").instantiate()
 	add_child(shop)
 	await get_tree().process_frame
 	var player: CharacterBody2D = shop.get_node("Entities/1")
+	_check(player.get_node("Sprite").texture.resource_path == "res://assets/characters/potionmaker.png", "solo uses chosen sprite rather than seat default")
 	var before := player.position
-	Input.action_press("move_up")
+	_key(KEY_W, true)
 	await get_tree().create_timer(0.25).timeout
-	Input.action_release("move_up")
+	_key(KEY_W, false)
 	await get_tree().create_timer(0.15).timeout
-	_check(player.position.y < before.y - 10.0, "real movement input moves local character")
+	_check(player.position.y < before.y - 10.0, "W keyboard input moves local character")
 	_check(player.position.distance_to(Session.players[1]["position"]) < 3.0, "authority receives local movement")
+	before = player.position
+	_key(KEY_RIGHT, true)
+	await get_tree().create_timer(0.25).timeout
+	_key(KEY_RIGHT, false)
+	await get_tree().create_timer(0.1).timeout
+	_check(player.position.x > before.x + 10.0, "arrow keyboard input moves local character")
+	for code in [KEY_A, KEY_D, KEY_W, KEY_S, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_E, KEY_SPACE]:
+		var action: StringName = {
+			KEY_A: &"move_left", KEY_D: &"move_right", KEY_W: &"move_up", KEY_S: &"move_down",
+			KEY_LEFT: &"move_left", KEY_RIGHT: &"move_right", KEY_UP: &"move_up", KEY_DOWN: &"move_down",
+			KEY_E: &"interact", KEY_SPACE: &"interact",
+		}[code]
+		_key(code, true)
+		_check(Input.is_action_pressed(action), "keyboard mapping for " + OS.get_keycode_string(code))
+		_key(code, false)
 	_check(shop.seat == 0 and shop.shop.has("coins"), "solo scene receives seat and shop")
 	shop.queue_free()
 	await get_tree().process_frame
@@ -85,6 +102,7 @@ func _host(port: int, ready_file: String) -> void:
 
 
 func _client(port: int) -> void:
+	Session.selected_character = 1
 	Session.command_finished.connect(func(value: Dictionary) -> void: result = value)
 	_check(Session.join_host("127.0.0.1", port) == OK, "client starts connection")
 	while not Session.active:
@@ -115,6 +133,9 @@ func _client(port: int) -> void:
 	await get_tree().process_frame
 	_check(shop.get_node("Entities").get_child_count() == 2, "client scene creates owner and observer")
 	_check(shop.seat == 1, "client scene owns second seat")
+	var local: Node = shop.get_node("Entities/" + str(multiplayer.get_unique_id()))
+	_check(local.get_node("Sprite").texture.resource_path == "res://assets/characters/potionmaker.png", "client uses chosen portrait")
+	_check(shop.get_node("Entities/1/Sprite").texture.resource_path == "res://assets/characters/elf.png", "observer uses host portrait")
 	await get_tree().create_timer(0.2).timeout
 	shop.queue_free()
 	await get_tree().process_frame
@@ -123,3 +144,13 @@ func _client(port: int) -> void:
 func _check(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
+
+
+func _key(code: Key, pressed: bool) -> void:
+	var event := InputEventKey.new()
+	event.device = InputEvent.DEVICE_ID_KEYBOARD
+	event.keycode = code
+	event.physical_keycode = code
+	event.pressed = pressed
+	Input.parse_input_event(event)
+	Input.flush_buffered_events()
