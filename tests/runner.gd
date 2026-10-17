@@ -49,7 +49,7 @@ func _basic() -> void:
 	var shop := preload("res://client/main.tscn").instantiate()
 	add_child(shop)
 	await get_tree().process_frame
-	var player: CharacterBody2D = shop.get_node("Entities/1")
+	var player: CharacterBody2D = shop.get_node("World/Entities/1")
 	_check(player.get_node("Sprite").texture.resource_path == "res://assets/characters/purple_shopkeeper/sheet.png", "solo uses chosen sprite rather than seat default")
 	var before := player.position
 	var purple: Sprite2D = player.get_node("Sprite")
@@ -64,7 +64,7 @@ func _basic() -> void:
 	_check(purple.frame == 2, "purple character briefly uses drawn blink frame")
 	_key(KEY_W, true)
 	await get_tree().create_timer(0.25).timeout
-	_check(player.animation.walk_amount > 0.5 and purple.frame >= 4, "walking uses purple character's drawn step frames")
+	_check(player.animation.walk_amount > 0.5 and purple.frame >= 12 and purple.frame < 16, "Renna uses rear walking frames for W input")
 	_key(KEY_W, false)
 	await get_tree().create_timer(0.15).timeout
 	_check(player.position.y < before.y - 10.0, "W keyboard input moves local character")
@@ -72,11 +72,31 @@ func _basic() -> void:
 	before = player.position
 	_key(KEY_RIGHT, true)
 	await get_tree().create_timer(0.25).timeout
+	_check(purple.frame >= 20 and purple.frame < 24 and not purple.flip_h, "Renna uses the right-facing profile walk")
 	_key(KEY_RIGHT, false)
 	await get_tree().create_timer(0.1).timeout
 	_check(player.position.x > before.x + 10.0, "arrow keyboard input moves local character")
 	await get_tree().create_timer(0.3).timeout
 	_check(player.animation.walk_amount < 0.05, "stopped character returns to idle")
+	_check(purple.frame >= 16 and purple.frame < 20, "horizontal release keeps profile idle")
+	_key(KEY_LEFT, true)
+	await get_tree().create_timer(0.2).timeout
+	_check(purple.frame >= 20 and purple.frame < 24 and purple.flip_h, "left movement mirrors the drawn profile")
+	_key(KEY_LEFT, false)
+	await get_tree().create_timer(0.3).timeout
+	_check(purple.frame >= 16 and purple.frame < 20 and purple.flip_h, "left-facing profile persists while idle")
+	_key(KEY_W, true)
+	_key(KEY_D, true)
+	await get_tree().create_timer(0.2).timeout
+	_check(purple.frame >= 12 and purple.frame < 16, "upward diagonal movement also faces away")
+	_key(KEY_W, false)
+	_key(KEY_D, false)
+	await get_tree().create_timer(0.3).timeout
+	_check(purple.frame >= 8 and purple.frame < 12, "stopping retains rear-facing idle")
+	_key(KEY_S, true)
+	await get_tree().create_timer(0.2).timeout
+	_check(purple.frame >= 4 and purple.frame < 8, "downward movement returns to front-facing walk")
+	_key(KEY_S, false)
 	for code in [KEY_A, KEY_D, KEY_W, KEY_S, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_E, KEY_SPACE]:
 		var action: StringName = {
 			KEY_A: &"move_left", KEY_D: &"move_right", KEY_W: &"move_up", KEY_S: &"move_down",
@@ -87,10 +107,12 @@ func _basic() -> void:
 		_check(Input.is_action_pressed(action), "keyboard mapping for " + OS.get_keycode_string(code))
 		_key(code, false)
 	_check(shop.seat == 0 and shop.shop.has("coins"), "solo scene receives seat and shop")
-	var queue: Node2D = shop.get_node("Room/Queue/Customers")
+	# A separate presentation fixture is not overwritten by live shop snapshots.
+	var queue: Node2D = preload("res://client/customer_view.gd").new()
+	add_child(queue)
 	var customers := [
-		{"id": 1, "order": Game.HEALING_POTION, "patience_seconds": 10.0, "angry": true},
-		{"id": 2, "order": Game.MANA_POTION, "patience_seconds": 10.0, "angry": false},
+		{"id": 1, "order": Game.HEALING_POTION, "patience_seconds": 10.0, "angry": true, "position": Vector2(200, 200), "facing": -PI / 2.0, "phase": "browsing"},
+		{"id": 2, "order": Game.MANA_POTION, "patience_seconds": 10.0, "angry": false, "position": Vector2(260, 200), "facing": -PI / 2.0, "phase": "browsing"},
 	]
 	queue.apply(customers, [0.0, 8.0])
 	var first: Node2D = queue.get_child(0)
@@ -100,19 +122,36 @@ func _basic() -> void:
 	_check(first.skin_palette_index != second_skin, "neighboring customers have varied fantasy skin")
 	_check(first.get_node("Sprite").texture != second_texture, "customers have distinct sprite assets")
 	_check(first.get_node("AngryMark").visible, "angry customer keeps visible feedback")
+	customers[0]["position"] = Vector2(200, 184)
+	customers[1]["position"] = Vector2(260, 184)
+	queue.apply(customers, [0.0, 8.0])
+	await get_tree().create_timer(0.2).timeout
+	_check(first.get_node("Sprite").frame % 24 >= 12 and first.get_node("Sprite").frame % 24 < 16, "arriving customer uses rear walking frames")
+	await get_tree().create_timer(0.6).timeout
+	_check(first.get_node("Sprite").frame % 24 >= 8 and first.get_node("Sprite").frame % 24 < 12, "waiting customer faces the counter with rear idle frames")
+	var old_position := second.position
 	customers.remove_at(0)
+	customers[0]["position"] = Vector2(304, 184)
+	customers[0]["facing"] = 0.0
 	queue.apply(customers, [8.0])
-	_check(first.get_node("Sprite").texture == second_texture, "appearance follows customer ID after queue shifts")
-	_check(first.skin_palette_index == second_skin, "skin color survives queue reordering")
-	_check(first.get_node("Sprite").modulate == Color.WHITE, "skin is not recolored by whole-body tint")
-	_check(not first.get_node("AngryMark").visible and not second.visible, "reused queue slot clears old anger and hides unused customer")
+	_check(queue.get_node("Customer_2") == second and not queue.has_node("Customer_1"), "queue retains the surviving customer node and removes the served customer")
+	_check(second.get_node("Sprite").texture == second_texture, "appearance follows customer ID after queue shifts")
+	_check(second.skin_palette_index == second_skin, "skin color survives queue reordering")
+	_check(second.position == old_position, "queue shift does not teleport the customer")
+	await get_tree().create_timer(0.2).timeout
+	_check(second.position.x > old_position.x and second.position.x < 304.0, "customer smoothly follows authoritative browsing motion")
+	_check(second.get_node("Sprite").frame % 24 >= 20, "customer uses profile walking frames while shifting sideways")
+	_check(second.get_node("Sprite").modulate == Color.WHITE, "skin is not recolored by whole-body tint")
+	_check(not second.get_node("AngryMark").visible, "surviving customer keeps its own calm state")
 	# Every outfit gets every palette, rather than binding a color to a role.
 	for kind in 4:
 		var seen := {}
 		for visit in 8:
-			first.show_customer(1 + kind + visit * 4, Game.HEALING_POTION, 1.0, false)
-			seen[first.skin_palette_index] = true
+			second.show_customer(1 + kind + visit * 4, Game.HEALING_POTION, 1.0, false)
+			seen[second.skin_palette_index] = true
+			_check(second.get_node("Sprite").frame / 24 == second.skin_palette_index, "animation stays within the correct skin palette block")
 		_check(seen.size() == 8, "all fantasy palettes available to outfit %d" % kind)
+	queue.queue_free()
 	shop.queue_free()
 	await get_tree().process_frame
 	Session.selected_character = 0
@@ -120,7 +159,7 @@ func _basic() -> void:
 	shop = preload("res://client/main.tscn").instantiate()
 	add_child(shop)
 	await get_tree().process_frame
-	player = shop.get_node("Entities/1")
+	player = shop.get_node("World/Entities/1")
 	var witch: Sprite2D = player.get_node("Sprite")
 	_check(witch.texture.resource_path == "res://assets/characters/blue_witch/sheet.png", "slot zero uses the redrawn original witch")
 	var idle_frame := witch.frame
@@ -128,10 +167,17 @@ func _basic() -> void:
 	_check(witch.frame < 4 and witch.frame != idle_frame, "blue witch cycles authored idle frames")
 	_key(KEY_D, true)
 	await get_tree().create_timer(0.2).timeout
-	_check(witch.frame >= 4 and witch.frame < 8, "blue witch uses walking frames during movement")
+	_check(witch.frame >= 20 and witch.frame < 24, "Aaron uses the drawn profile when walking right")
 	_key(KEY_D, false)
 	await get_tree().create_timer(0.3).timeout
-	_check(witch.frame < 4, "blue witch returns to idle frames after stopping")
+	_check(witch.frame >= 16 and witch.frame < 20, "Aaron keeps profile idle when stopping")
+	_key(KEY_UP, true)
+	await get_tree().create_timer(0.2).timeout
+	_check(witch.frame >= 12 and witch.frame < 16, "Aaron uses rear walking frames for up-arrow input")
+	_key(KEY_UP, false)
+	await get_tree().create_timer(0.3).timeout
+	_check(witch.frame >= 8 and witch.frame < 12, "Aaron retains rear idle on release")
+	await _interactive_inputs(shop)
 	shop.queue_free()
 	await get_tree().process_frame
 
@@ -146,13 +192,25 @@ func _host(port: int, ready_file: String) -> void:
 	var file := FileAccess.open(ready_file, FileAccess.WRITE)
 	file.store_string("ready")
 	file.close()
+	var initial_stock := int(Session.document["shelves"][Game.WATERBLOOM])
 	# Two sequential clients exercise disconnect, seat reuse and late snapshots.
 	for cycle in 2:
 		while Session.players.size() < 2:
 			await get_tree().process_frame
+		var saw_rear_walk := false
+		var saw_profile_walk := false
 		while str(Session.document["held"]["1"]) != Game.WATERBLOOM:
+			for node in shop.get_node("World/Entities").get_children():
+				if node.get("seat") == 1:
+					var sprite: Sprite2D = node.get_node("Sprite")
+					if sprite.frame >= 12 and sprite.frame < 16:
+						saw_rear_walk = true
+					if sprite.frame >= 20 and sprite.frame < 24 and sprite.flip_h:
+						saw_profile_walk = true
 			await get_tree().process_frame
-		_check(int(Session.document["shelves"][Game.WATERBLOOM]) == Game.SHELF_START_STOCK - cycle - 1, "host sees client interaction exactly once")
+		_check(saw_rear_walk, "host observes remote player's rear walking animation")
+		_check(saw_profile_walk, "host observes remote player's left-facing profile walk")
+		_check(int(Session.document["shelves"][Game.WATERBLOOM]) == initial_stock - cycle - 1, "host sees client interaction exactly once")
 		while Session.players.size() > 1:
 			await get_tree().process_frame
 		_check(str(Session.document["held"]["1"]) == "", "disconnect clears inventory")
@@ -168,37 +226,201 @@ func _client(port: int) -> void:
 		await get_tree().process_frame
 	_check(Session.local_seat == 1 and Session.players.size() == 2, "join receives distinct seat and both players")
 	var stock := int(Session.document["shelves"][Game.WATERBLOOM])
-	Session.send_command("take", "shelves", Game.WATERBLOOM)
+	var local_stock := int(Session.document["shelf_stock"][Game.shelf_id(Game.WATERBLOOM)][Game.WATERBLOOM])
+	Session.send_command("take", Game.shelf_id(Game.WATERBLOOM), Game.WATERBLOOM)
 	while result.is_empty():
 		await get_tree().process_frame
 	_check(not bool(result["ok"]) and result["reason"] == "too_far", "remote out-of-range command refused")
 	var position: Vector2 = Session.players[multiplayer.get_unique_id()]["position"]
+	# Actual northward movement must also select rear frames on the other peer.
+	for step in 4:
+		position += Vector2(0.0, -8.0)
+		Session.send_motion(position, -PI / 2.0)
+		await get_tree().create_timer(0.08).timeout
+	for step in 4:
+		position += Vector2(-8.0, 0.0)
+		Session.send_motion(position, PI)
+		await get_tree().create_timer(0.08).timeout
 	var target := Game.shelf_spot(Game.WATERBLOOM)
 	# Transport integration: legal-speed pose updates, independent of rendering.
-	while position.distance_to(target) > 0.1:
-		position = position.move_toward(target, 12.0)
-		Session.send_motion(position, 0.0)
-		await get_tree().create_timer(0.08).timeout
+	var navigation := preload("res://network/shop_navigation.gd").new()
+	for waypoint in navigation.route(position, target):
+		while position.distance_to(waypoint) > 0.1:
+			var direction := (waypoint - position).angle()
+			position = position.move_toward(waypoint, 12.0)
+			Session.send_motion(position, direction)
+			await get_tree().create_timer(0.08).timeout
 	_check((Session.players[multiplayer.get_unique_id()]["position"] as Vector2).distance_to(target) < 1.0, "host accepts and replicates movement")
 	result = {}
-	Session.send_command("take", "shelves", Game.WATERBLOOM)
+	Session.send_command("take", Game.shelf_id(Game.WATERBLOOM), Game.WATERBLOOM)
 	while result.is_empty():
 		await get_tree().process_frame
 	_check(bool(result["ok"]), "remote ingredient pickup accepted")
 	_check(str(Session.document["held"]["1"]) == Game.WATERBLOOM, "client receives authoritative held item")
 	_check(int(Session.document["shelves"][Game.WATERBLOOM]) == stock - 1, "client stock converges")
+	_check(int(Session.document["shelf_stock"][Game.shelf_id(Game.WATERBLOOM)][Game.WATERBLOOM]) == local_stock - 1, "specific shelf stack replicates to client")
 	var shop := preload("res://client/main.tscn").instantiate()
 	add_child(shop)
 	await get_tree().process_frame
-	_check(shop.get_node("Entities").get_child_count() == 2, "client scene creates owner and observer")
+	_check(shop.get_node("World/Entities").get_child_count() == 2, "client scene creates owner and observer")
 	_check(shop.seat == 1, "client scene owns second seat")
-	var local: Node = shop.get_node("Entities/" + str(multiplayer.get_unique_id()))
+	var local: Node = shop.get_node("World/Entities/" + str(multiplayer.get_unique_id()))
 	_check(local.get_node("Sprite").texture.resource_path == "res://assets/characters/purple_shopkeeper/sheet.png", "client uses chosen purple character sheet")
-	_check(shop.get_node("Entities/1/Sprite").texture.resource_path == "res://assets/characters/blue_witch/sheet.png", "observer uses host blue witch sheet")
+	_check(shop.get_node("World/Entities/1/Sprite").texture.resource_path == "res://assets/characters/blue_witch/sheet.png", "observer uses host blue witch sheet")
 	await get_tree().create_timer(0.2).timeout
 	shop.queue_free()
 	await get_tree().process_frame
 
+
+func _interactive_inputs(shop: Node2D) -> void:
+	# Position fixtures isolate real E-key targeting and scene feedback. Movement
+	# and route reachability are covered separately; this is not a human walkthrough.
+	Session.authority.shop.doc["customers"] = []
+	Session.authority.shop._paths.clear()
+	Session.authority.shop._next_arrival_msec = Time.get_ticks_msec() + 60000
+	var potion_rack: Node = shop.get_node("World/Props/water_south")
+	var visible_bottles := 0
+	for stack in potion_rack._icons:
+		for icon in stack:
+			if icon.visible:
+				visible_bottles += 1
+	_check(visible_bottles == 0, "empty potion furniture contains no baked or runtime stock")
+	for item in Game.ALL_ITEMS:
+		var icon := preload("res://client/item_icon.gd").new()
+		icon.set_item(item)
+		_check(icon.texture != null and icon.texture.get_size() == Vector2(128, 40), "independent animated item asset exists: " + str(item))
+		icon.free()
+	# Exercise actual CharacterBody collision against the front of the tall shelf.
+	var approach := Game.shelf_spot(Game.MOONLEAF)
+	Session.authority.players[1]["position"] = approach
+	Session._correct(Session.authority.players[1])
+	Session._publish()
+	var player: CharacterBody2D = shop.get_node("World/Entities/1")
+	_key(KEY_W, true)
+	await get_tree().create_timer(0.5).timeout
+	_key(KEY_W, false)
+	_check(player.position.y >= Game.FURNITURE[Game.shelf_id(Game.MOONLEAF)]["at"].y + Game.PLAYER_RADIUS - 0.5, "actual player stops at shelf front instead of walking through sprite")
+	_check(player.position.y < approach.y - 5.0, "player can approach until feet reach collision")
+	_check(Game.floor_clear(player.position, Game.PLAYER_RADIUS - 0.5), "physical body and shared footprint agree")
+	for fixture in [{"id": "moon_island", "key": KEY_W}, {"id": "water_east", "key": KEY_W}, {"id": "fire_east", "key": KEY_W}]:
+		var start := Game.station_point(fixture["id"])
+		Session.authority.players[1]["position"] = start
+		Session._correct(Session.authority.players[1])
+		Session._publish()
+		_key(fixture["key"], true)
+		await get_tree().create_timer(0.45).timeout
+		_key(fixture["key"], false)
+		await get_tree().create_timer(0.1).timeout
+		_check(player.position.distance_to(start) > 3.0, "player approaches oriented shelf: " + fixture["id"])
+		_check(Game.floor_clear(player.position, Game.PLAYER_RADIUS - 0.5), "physical collision follows angled footprint: " + fixture["id"])
+		_check(player.position.distance_to(Session.players[1]["position"]) < 2.0, "collision and authority stay synchronized: " + fixture["id"])
+	for raw in Game.recipe_needs(Game.HEALING_POTION):
+		await _interact_at(Game.shelf_spot(raw), raw)
+		_check(Session.authority.shop.held(0) == raw, "E picks up ingredient from its shelf")
+		await _interact_at(Game.station_point("cauldron"))
+		_check(Session.authority.shop.held(0) == "", "E drops held ingredient into cauldron")
+	await get_tree().create_timer(5.2).timeout
+	await _interact_at(Game.station_point("cauldron"))
+	_check(Session.authority.shop.held(0) == Game.HEALING_POTION, "E collects brewed potion from cauldron")
+	await _interact_at(Game.station_point("water_south"))
+	_check(Session.authority.shop.stock_at("water_south", Game.HEALING_POTION) == 1, "crafted bottle can be placed on an empty shelf")
+	visible_bottles = 0
+	for stack in potion_rack._icons:
+		for icon in stack:
+			if icon.visible and icon.modulate.a > 0.5:
+				visible_bottles += 1
+	_check(visible_bottles == 1, "a placed bottle is a separate visible sprite on its shelf board")
+	await _interact_at(Game.station_point("water_south"))
+	_check(Session.authority.shop.held(0) == Game.HEALING_POTION, "bottle can be picked back up from shelf")
+	await _interact_at(Game.station_point("storage_west"))
+	_check(Session.authority.shop.held(0) == "", "E stores potion in chest")
+	await get_tree().create_timer(0.25).timeout
+	_check(shop.get_node("World/Props/storage_west/Sprite").frame > 0, "storage interaction plays drawn lid frames")
+	await _interact_at(Game.station_point("storage_west"))
+	_check(Session.authority.shop.held(0) == Game.HEALING_POTION, "E retrieves potion from chest")
+	Session.authority.shop._arrive(Time.get_ticks_msec())
+	var customer: Dictionary = Session.authority.shop.doc["customers"][0]
+	customer["position"] = Vector2(288, 192)
+	customer["order"] = Game.HEALING_POTION
+	customer["phase"] = "waiting"
+	customer["look_until"] = Time.get_ticks_msec() + 10000
+	Session.authority.shop._arrive(Time.get_ticks_msec())
+	var other: Dictionary = Session.authority.shop.doc["customers"][1]
+	other["position"] = Vector2(320, 192)
+	other["order"] = Game.MANA_POTION
+	other["phase"] = "waiting"
+	other["look_until"] = Time.get_ticks_msec() + 10000
+	Session.authority.shop._paths.clear()
+	Session.authority.players[1]["position"] = Vector2(288, 206)
+	Session._correct(Session.authority.players[1])
+	Session._publish()
+	await get_tree().process_frame
+	await _click_world(shop, Vector2(320, 104))
+	_check(not customer["served"] and Session.authority.shop.held(0) == Game.HEALING_POTION, "clicking another request targets that customer, not the nearest one")
+	await _click_world(shop, Vector2(288, 104))
+	_check(customer["served"] and int(Session.document["coins"]) == Game.reward(Game.HEALING_POTION), "E serves nearby roaming customer and awards coins")
+	Session.authority.shop.doc["door_open_until"] = 0
+	await _interact_at(Game.DOOR_POINT)
+	await get_tree().create_timer(0.25).timeout
+	_check(shop.get_node("Environment/Door").frame > 0, "E plays door opening frames")
+	# Aim at a non-default sprite and use a real viewport mouse click to pick it.
+	var station := Game.shelf_id(Game.WATERBLOOM)
+	Session.authority.players[1]["position"] = Game.station_point(station)
+	Session._correct(Session.authority.players[1])
+	Session._publish()
+	await get_tree().process_frame
+	var shelf: Node = shop.get_node("World/Props/" + station)
+	await _click_world(shop, shelf.item_position(Game.WATERBLOOM))
+	_check(Session.authority.shop.held(0) == Game.WATERBLOOM, "click selects the visually pointed-at ingredient rather than the shelf's first item")
+	await _interact_at(Game.station_point(station), Game.WATERBLOOM)
+	_key(KEY_R, true)
+	await get_tree().process_frame
+	_key(KEY_R, false)
+	_check(shop.hud._recipe_panel.visible, "R opens recipe book")
+	for potion in Game.POTIONS:
+		var row: Node = shop.hud._recipe_panel.find_child("Recipe_" + str(potion), true, false)
+		var shown: Array = []
+		if row != null:
+			for child in row.get_children():
+				if child.has_method("setup"):
+					shown.append(child.icon.item_id)
+		var expected: Array = Game.recipe_needs(potion).keys()
+		expected.append(potion)
+		_check(shown == expected, "recipe shows exact reusable ingredient/bottle sprites, without item names")
+	_check(not shop.has_node("Room/Queue") and not shop.has_node("World/Props/prep"), "old queue rectangle and removed stations are absent")
+
+func _click_world(shop: Node2D, point: Vector2) -> void:
+	var at := get_viewport().get_screen_transform() * (shop.get_global_transform_with_canvas() * point)
+	var motion := InputEventMouseMotion.new()
+	motion.device = InputEvent.DEVICE_ID_MOUSE
+	motion.position = at
+	motion.global_position = at
+	Input.parse_input_event(motion)
+	Input.flush_buffered_events()
+	for pressed in [true, false]:
+		var event := InputEventMouseButton.new()
+		event.device = InputEvent.DEVICE_ID_MOUSE
+		event.position = at
+		event.global_position = at
+		event.button_index = MOUSE_BUTTON_LEFT
+		event.button_mask = MOUSE_BUTTON_MASK_LEFT if pressed else 0
+		event.pressed = pressed
+		Input.parse_input_event(event)
+		Input.flush_buffered_events()
+		await get_tree().process_frame
+
+func _interact_at(point: Vector2, selected_item: String = "") -> void:
+	Session.authority.players[1]["position"] = point
+	Session._correct(Session.authority.players[1])
+	Session._publish()
+	await get_tree().process_frame
+	if selected_item != "":
+		get_node("Main/World/Props/" + Game.shelf_id(selected_item)).select_item(selected_item)
+	_key(KEY_E, true)
+	await get_tree().process_frame
+	await get_tree().physics_frame
+	_key(KEY_E, false)
+	await get_tree().process_frame
 
 func _check(condition: bool, message: String) -> void:
 	if not condition:

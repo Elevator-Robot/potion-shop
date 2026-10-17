@@ -1,5 +1,10 @@
 # Potion-shop environment art
 
+The active room now uses the detailed pixel-art assets in **`pixel_shop/`**;
+see [its frame and regeneration guide](pixel_shop/README.md). The older SVG
+building textures below are retained as source/reference art. `window_light.png`
+is still used as a translucent light overlay.
+
 Original SVG assets authored for this project, with no external asset dependencies.
 Editable source artwork is imported by Godot as ordinary textures. The floor and
 light overlay also have baked PNGs: Godot's SVG importer does not render their

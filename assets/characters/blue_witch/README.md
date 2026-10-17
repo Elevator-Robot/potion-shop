@@ -8,7 +8,7 @@ Matches the purple shopkeeper's warm outlines, large eyes, blush, small smile
 and chibi proportions. This replaces Elf Adventurer in player slot 0. The purple
 shopkeeper stays available in slot 1 and remains the default menu selection.
 
-Eight individually editable SVG/PNG frames, **32×40** each:
+Twenty-four individually editable SVG/PNG frames, **32×40** each. Front poses:
 
 - `idle_0`: relaxed, open eyes, planted boots.
 - `idle_1`: inhale, raised head/hat/shoulders, lifted hands and moving hair ends.
@@ -19,10 +19,19 @@ Eight individually editable SVG/PNG frames, **32×40** each:
 - `walk_2`: right-foot contact and reversed arm swing.
 - `walk_3`: opposite raised passing pose.
 
-`sheet.png` packs four idle frames above four walk frames, **128×80** total.
+Each pose also has a `back_` version with chestnut rear hair, coat seam, plain
+belt and the pouch on the opposite side. No face or front buckle shows through.
+
+There are also eight `profile_` poses, drawn with one visible eye, side nose,
+rear hair, wide side-on hat brim, side belt/pouch and alternating near/far limbs.
+These are right-facing profiles, mirrored for left-facing movement.
+
+`sheet.png` has front idle/walk, rear idle/walk and profile idle/walk rows,
+**128×240** total (four columns, six rows).
 `preview.tres` selects the first frame for the menu. Walking follows distance;
-idle holds the relaxed pose longer and exposes the blink briefly. Front-facing
-art is mirrored for horizontal direction; these are not four-direction sheets.
+idle holds the relaxed pose longer and exposes the blink briefly. Upward and
+upward-diagonal motion uses rear frames and retains rear idle on release.
+Horizontal movement selects the profile drawings, retaining that view while idle.
 
 Regenerate using Python 3 and ImageMagick:
 

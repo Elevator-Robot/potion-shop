@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Draw eight cozy animation poses based on the original blue witch portrait."""
+"""Draw front/rear idle and walking poses based on the original blue witch portrait."""
 
 from pathlib import Path
 import subprocess
 
-from draw_purple_character import PALETTE, POSES
+from draw_purple_character import PALETTE, POSES, pack_rows
+from profile_art import draw_profile
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets/characters/blue_witch"
@@ -36,7 +37,7 @@ def arm(x, y):
             + rect(x + 1, y + 4, 3, 2, "skin_shadow") + rect(x + 1, y + 4, 2, 1, "skin_light"))
 
 
-def head(pose):
+def head(pose, back=False):
     p = [f'<g transform="translate(0 {pose["head"]})">']
     # Chestnut hair under the hat, with warm highlights and separate moving ends.
     p += [path("M8 11h16v2h3v12h-2v4h-5v-2H10v2H5v-3H3v-8h2v-5h3z", "ink")]
@@ -57,6 +58,13 @@ def head(pose):
     p += [rect(7, 22, 4, 2, "blush"), rect(21, 22, 4, 2, "blush"), rect(15, 22, 1, 1, "skin_shadow"), rect(14, 24, 1, 1, "skin_shadow"), rect(15, 25, 2, 1, "skin_shadow"), rect(17, 24, 1, 1, "skin_shadow")]
     p += [path(f'M5 23h2v{3 + pose["curl"]}h3v2H6v-2H5z', "hair"), path(f'M24 23h2v{3 - pose["curl"]}h-2v2h-3v-2h3z', "hair")]
     p += [rect(6, 24, 1, 3, "hair_light"), rect(24, 24, 1, 2, "hair_light")]
+    if back:
+        # Cover the front construction with a distinct rear hair drawing.
+        # The lower hair is scalloped and highlighted, with no eyes or cheeks.
+        p += [path("M7 12h18v3h1v9h-2v3h-4v1h-9v-1H7v-3H5v-8h2z", "hair_dark")]
+        p += [path("M8 13h15v2h2v8h-3v3h-3v1h-7v-2H8v-2H6v-7h2z", "hair")]
+        p += [path("M10 15h2v9h-2zM16 14h2v7h-1v5h-2v-7h1zM22 15h1v8h-2v-3h1z", "hair_dark")]
+        p += [rect(8, 16, 1, 7, "hair_light"), rect(13, 16, 1, 8, "hair_light"), rect(20, 16, 1, 6, "hair_light")]
     # Wide, upturned brim and bent cone: unmistakably the original witch hat.
     p += [path("M1 11h5V9h3V6h2V3h3V1h9v2h-3v3h2v4h5v1h4v4h-3v1H4v-1H1z", "ink")]
     p += [path("M3 12h5v-2h3V7h2V4h3V2h5v1h-3v3h2v4h3v2h6v2h-3v1H6v-1H3z", "hat_dark")]
@@ -69,9 +77,9 @@ def head(pose):
     return ''.join(p)
 
 
-def draw(pose):
+def draw(pose, back=False):
     p = ['<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40" shape-rendering="crispEdges">',
-         f'<title>Blue witch — {pose["name"]}</title>']
+         f'<title>Blue witch — {"back_" if back else ""}{pose["name"]}</title>']
     p += [boot(*foot) for foot in pose["feet"]]
     p += [arm(*pose["left"]), arm(*pose["right"])]
     p += [f'<g transform="translate(0 {pose["body"]})">']
@@ -79,21 +87,26 @@ def draw(pose):
     p += [path("M11 26h10v2h2v4h1v3H9v-3H8v-4h3z", "coat_dark")]
     p += [path("M11 27h9v1h2v3h-1v3H10v-3H9v-3h2z", "coat")]
     p += [rect(10, 28, 2, 3, "coat_light"), rect(10, 34, 4, 1, "coat_light"), rect(17, 33, 1, 2, "coat_light")]
-    p += [path("M11 26h3l2 3 2-3h3l-2 4h-6z", "coat_light")]
-    p += [rect(9, 31, 14, 2, "boot"), rect(14, 31, 4, 2, "gold"), rect(15, 31, 2, 1, "ink")]
-    p += [rect(20, 31, 4, 4, "ink"), rect(20, 32, 3, 2, "boot_light"), rect(21, 32, 1, 1, "gold")]
-    p += ['</g>', head(pose), '</svg>']
+    if back:
+        p += [rect(15, 27, 1, 9, "coat_dark"), rect(9, 31, 14, 2, "boot")]
+        p += [rect(8, 31, 4, 4, "ink"), rect(9, 32, 3, 2, "boot"), rect(10, 32, 1, 1, "boot_light")]
+    else:
+        p += [path("M11 26h3l2 3 2-3h3l-2 4h-6z", "coat_light")]
+        p += [rect(9, 31, 14, 2, "boot"), rect(14, 31, 4, 2, "gold"), rect(15, 31, 2, 1, "ink")]
+        p += [rect(20, 31, 4, 4, "ink"), rect(20, 32, 3, 2, "boot_light"), rect(21, 32, 1, 1, "gold")]
+    p += ['</g>', head(pose, back), '</svg>']
     return '\n'.join(p) + '\n'
 
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    for pose in POSES:
-        svg = OUT / (pose["name"] + ".svg")
-        png = OUT / (pose["name"] + ".png")
-        svg.write_text(draw(pose))
-        subprocess.run(["magick", "-background", "none", str(svg), str(png)], check=True)
-    subprocess.run(["magick", "(", *[str(OUT / f"idle_{i}.png") for i in range(4)], "+append", ")", "(", *[str(OUT / f"walk_{i}.png") for i in range(4)], "+append", ")", "-append", str(OUT / "sheet.png")], check=True)
+    for view in ("front", "back", "profile"):
+        for pose in POSES:
+            name = (view + "_" if view != "front" else "") + pose["name"]
+            svg, png = OUT / (name + ".svg"), OUT / (name + ".png")
+            svg.write_text(draw_profile("aaron", pose, COLORS) if view == "profile" else draw(pose, view == "back"))
+            subprocess.run(["magick", "-background", "none", str(svg), str(png)], check=True)
+    pack_rows(OUT, ("idle", "walk", "back_idle", "back_walk", "profile_idle", "profile_walk"), OUT / "sheet.png")
 
 
 if __name__ == "__main__":

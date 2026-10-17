@@ -38,7 +38,7 @@ horizontal_alignment = 1
 
 [node name="Hint" type="Label" parent="Center/Content"]
 layout_mode = 2
-text = "WASD / arrows: move · E / Space: interact\nHold to chop · Esc: leave shop"
+text = "WASD / arrows: move · E / click: interact\nPoint at shelf items · Tab: cycle · R: recipes"
 horizontal_alignment = 1
 
 [node name="Portrait" type="TextureRect" parent="Center/Content"]

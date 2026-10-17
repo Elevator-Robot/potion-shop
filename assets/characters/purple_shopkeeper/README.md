@@ -7,8 +7,8 @@ pocket, a flower clip, and little brown boots define the new chibi silhouette.
 
 ## Frames
 
-Each editable SVG and transparent PNG is **32×40**. `sheet.png` is **128×80**,
-four columns by two rows. Row 0 is idle; row 1 is walking.
+Each editable SVG and transparent PNG is **32×40**. `sheet.png` is **128×240**,
+four columns by six rows: front idle/walk, rear idle/walk, then profile idle/walk.
 
 | Frame | Drawing |
 | --- | --- |
@@ -21,9 +21,15 @@ four columns by two rows. Row 0 is idle; row 1 is walking.
 | `walk_2` | Right foot forward, left foot lifted, reversed arm swing |
 | `walk_3` | Opposite passing pose with corresponding arm positions |
 
-The frames redraw facial expression, limbs, hair tips and clothing positions;
-they are not whole-portrait squash/stretch transformations. These are front-facing
-animations with horizontal mirroring, not back-view or four-direction sheets.
+Every listed pose also has a `back_` version. Rear views have a fully drawn mass
+of violet hair, visible ear backs, the opposite-side flower and apron ties;
+there are no eyes, cheeks or front pockets on the back. Eight `profile_` poses
+have one visible eye, a side nose and pointed ear, layered rear curls, side apron,
+and alternating near/far limbs. There are 24 poses total.
+The frames redraw limbs, hair tips and clothing positions rather than deforming
+the whole portrait. Upward/diagonal motion uses rear art and retains rear idle
+when stopped. Horizontal motion selects the right-profile drawings, mirrored
+for left-facing movement. Profile idle persists after release.
 Idle holds the relaxed pose longer and gives the blink a brief exposure.
 
 ## Editing

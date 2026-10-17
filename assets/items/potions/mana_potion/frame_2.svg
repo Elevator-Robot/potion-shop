@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40" shape-rendering="crispEdges">
+<defs><clipPath id="glass"><path d="M15 7h2v8c14 3 14 20-1 21C1 35 1 18 15 15z"/></clipPath></defs>
+<path d="M13 3h6v4h-1v7c15 3 16 22-2 24C-2 36-1 17 14 14V7h-1z" fill="#241f36" opacity="1"/>
+<path d="M15 7h2v8c14 3 14 20-1 21C1 35 1 18 15 15z" fill="#697b89" opacity="1"/>
+<g clip-path="url(#glass)">
+<rect x="0" y="21" width="32" height="19" fill="#438fdf" opacity="1"/>
+<rect x="0" y="21" width="32" height="1" fill="#a1dcf3" opacity="1"/>
+<rect x="0" y="33" width="32" height="4" fill="#241d3e" opacity="0.22"/>
+<rect x="12" y="31" width="2" height="2" fill="#a1dcf3" opacity="0.85"/>
+<rect x="12" y="31" width="1" height="1" fill="#fff5df" opacity="1"/>
+<rect x="18" y="28" width="1" height="1" fill="#a1dcf3" opacity="0.85"/>
+<rect x="18" y="28" width="1" height="1" fill="#fff5df" opacity="1"/>
+<rect x="23" y="25" width="1" height="1" fill="#a1dcf3" opacity="0.85"/>
+<rect x="23" y="25" width="1" height="1" fill="#fff5df" opacity="1"/>
+<rect x="7" y="20" width="1" height="9" fill="#e5eff0" opacity="0.75"/>
+<rect x="8" y="19" width="2" height="2" fill="#f7f3dd" opacity="1"/>
+<rect x="24" y="26" width="1" height="6" fill="#d8dde4" opacity="0.55"/>
+</g>
+<rect x="14" y="3" width="4" height="3" fill="#98714f" opacity="1"/>
+<rect x="14" y="3" width="4" height="1" fill="#d6b27e" opacity="1"/>
+<rect x="13" y="6" width="6" height="1" fill="#a1dcf3" opacity="1"/>
+</svg>

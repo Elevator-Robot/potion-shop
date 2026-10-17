@@ -23,6 +23,11 @@ The report in `docs/research/` describes the pre-migration project, not current 
 - `client/`: input, presentation, HUD, and owner/observer player scenes.
 - `network/session.gd`: `Session` autoload; ENet lifecycle, RPCs, state delivery.
 - `network/game.gd`: shared constants, recipes, station geometry, helpers.
+- `network/shop_navigation.gd`: host-side customer paths around shared furniture.
+- `client/customer_view.gd`: interpolated roaming customers, not queue slots.
+- `client/shop_prop.gd`: pixel furniture, foot collisions and interaction frames.
+- `client/item_icon.gd`: one canonical animated sprite per ingredient/potion,
+  reused in shelves, hands, recipes and customer bubbles; no item-name UI.
 - `authority/main.gd`: host-owned seat, movement and command validation.
 - `authority/shop.gd`: shop rules and authoritative state.
 - `assets/characters/`: existing character art; reuse it.

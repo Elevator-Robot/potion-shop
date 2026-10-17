@@ -10,7 +10,8 @@ import json
 import subprocess
 import tempfile
 
-from draw_purple_character import PALETTE
+from draw_purple_character import PALETTE, POSES as PLAYER_POSES, pack_rows
+from profile_art import draw_profile
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets/customers/cozy"
@@ -34,6 +35,12 @@ POSES = [
     dict(name="idle_2", lift=0, hands=0, blink=True, settle=0),
     dict(name="idle_3", lift=0, hands=1, blink=False, settle=-1),
 ]
+WALK_POSES = [
+    dict(name=p["name"], lift=p["head"], hands=0, blink=False, settle=p["curl"],
+         feet=p["feet"], arms=(p["left"], p["right"]))
+    for p in PLAYER_POSES if p["name"].startswith("walk_")
+]
+ALL_POSES = POSES + WALK_POSES
 
 
 class Drawing:
@@ -87,21 +94,132 @@ class Drawing:
         r(17, 22, 1, 1, "skin_shadow")
 
 
-def draw(kind, pose, skin=None):
-    d = Drawing(kind, pose, skin)
+def draw_limbs(d, pose):
     r, p = d.rect, d.path
-    # Planted feet are not moved by the breathing animation.
-    for x in (9, 18):
-        r(x, 35, 6, 4, "ink")
-        r(x + 1, 35, 4, 3, "boot")
-        r(x + 1, 35, 3, 1, "boot_light")
-    for x in (4, 23):
-        y = 26 + pose["hands"]
+    for x, y, forward in pose.get("feet", ((9, 35, False), (18, 35, False))):
+        width = 7 if forward else 6
+        r(x, y, width, 4, "ink")
+        r(x + 1, y, width - 2, 3, "boot")
+        r(x + 1, y, 3, 1, "boot_light")
+    arms = pose.get("arms", ((4, 26 + pose["hands"]), (23, 26 + pose["hands"])))
+    for x, y in arms:
         r(x, y, 5, 6, "ink")
         r(x + 1, y, 3, 3, "cloth")
         r(x + 1, y, 3, 1, "cloth_light")
         r(x + 1, y + 3, 3, 3, "skin_shadow")
         r(x + 1, y + 3, 2, 2, "skin_light")
+
+
+def draw_rear(kind, pose, skin):
+    d = Drawing(kind, pose, skin)
+    r, p = d.rect, d.path
+    draw_limbs(d, pose)
+    d.group(pose["lift"])
+    p("M10 23h12v2h2v6h-2v5H9v-5H7v-6h3z", "ink")
+    p("M10 24h11v2h2v4h-2v5H10v-5H8v-4h2z", "cloth_dark")
+    p("M11 24h9v2h2v3h-2v5h-9v-5H9v-3h2z", "cloth")
+    if kind == "elf":
+        p("M9 24h13v4h1v4l-7 4-7-4z", "cloth_dark")
+        p("M11 25h9v4h1v2l-5 3-5-3z", "cloth")
+        r(15, 27, 1, 6, "cloth_light")
+        r(8, 30, 4, 4, "ink")
+        r(9, 31, 3, 2, "boot")
+    elif kind == "knight":
+        r(10, 26, 12, 7, "cloth_dark")
+        r(11, 27, 10, 5, "cloth")
+        r(15, 27, 1, 5, "cloth_light")
+        r(11, 29, 10, 1, "cloth_light")
+        r(10, 33, 12, 2, "accent")
+    elif kind == "wizard":
+        p("M10 25h11v7h2v4H8v-3h2z", "cloth_dark")
+        p("M11 26h9v7h1v2H10z", "cloth")
+        r(15, 27, 1, 8, "cloth_light")
+        r(9, 35, 13, 1, "gold")
+    else:
+        r(10, 27, 12, 8, "cloth_dark")
+        r(11, 28, 10, 6, "cloth")
+        p("M11 27h2v2h2v2h-2v-1h-2zM19 27h2v3h-2v1h-2v-2h2z", "green_light")
+        r(10, 32, 12, 2, "boot")
+        r(15, 31, 2, 4, "green_dark")
+    # Ears and nape show the same fantasy skin palette as the face and hands.
+    r(13, 23, 7, 3, "skin_shadow")
+    if kind == "elf":
+        p("M1 13h5v2h2v5H5v-1H3v-2H1zM26 13h5v4h-2v2h-2v1h-3v-5h2z", "ink")
+        p("M2 14h4v2h1v3H5v-2H3v-1H2zM26 14h4v2h-1v1h-2v2h-2v-3h1z", "skin_shadow")
+        r(2, 14, 3, 1, "skin")
+        r(27, 14, 3, 1, "skin")
+    else:
+        r(4, 16, 4, 5, "ink")
+        r(24, 16, 4, 5, "ink")
+        r(5, 17, 3, 3, "skin_shadow")
+        r(24, 17, 3, 3, "skin_shadow")
+    p("M11 3h10v2h4v3h2v14h-3v3H8v-3H5V8h2V5h4z", "ink")
+    p("M11 4h10v2h3v3h2v12h-3v3H9v-3H6V9h2V6h3z", "hair_dark")
+    p("M10 9h13v3h2v9h-3v2H10v-2H7v-9h3z", "hair")
+    r(10, 14, 1, 7, "hair_light")
+    r(20, 14, 1, 7, "hair_light")
+    p("M15 12h2v6h-1v6h-2v-6h1z", "hair_dark")
+    if kind == "elf":
+        p("M5 10V8h2V5h5V3h10V2h6v2h-3v3h-3v3z", "ink")
+        p("M7 9V7h5V5h10V3h3v1h-2v3h-3v2z", "cloth")
+        r(7, 9, 17, 2, "cloth_dark")
+        p(f'M8 7v-3H6V{1 + max(0, pose["settle"])}H4v3h2v3z', "cream")
+        r(7, 21 + pose["settle"], 2, 3, "hair")
+        r(23, 22 - pose["settle"], 2, 3, "hair")
+    elif kind == "knight":
+        # A closed curved helmet rear: riveted plate and neck guard, no visor.
+        p("M6 13V8h2V5h4V3h9v2h4v3h2v15h-3v2H8v-2H5V13z", "ink")
+        p("M7 12V8h3V6h12v2h3v13h-3v3H10v-2H7z", "cloth")
+        r(10, 6, 12, 1, "cloth_light")
+        r(14, 7, 2, 16, "cloth_dark")
+        r(16, 7, 1, 15, "cloth_light")
+        r(7, 18, 18, 2, "cloth_dark")
+        r(10, 22, 12, 1, "cloth_light")
+        r(9, 16, 1, 1, "cloth_light")
+        r(22, 16, 1, 1, "cloth_light")
+        p(f'M15 5V2h3V{1 + max(0, pose["settle"])}h5v2h-4v2z', "accent")
+    elif kind == "wizard":
+        # Silver hair at the back, with the plain reverse of the star hat.
+        r(8, 19, 2, 4, "hair_light")
+        r(22, 19, 2, 4, "hair_light")
+        p("M2 12h5V9h2V6h3V3h4V1h6v3h-3v3h3v3h4v2h4v4H2z", "ink")
+        p("M4 13h5V9h2V6h3V4h3V2h3v1h-3v4h3v3h3v3h5v2H4z", "cloth")
+        r(4, 13, 24, 2, "cloth_dark")
+        r(9, 11, 14, 2, "accent")
+        r(15, 5, 1, 5, "cloth_light")
+    else:
+        # A short copper braid rather than a beard visible through the head.
+        r(13, 20, 6, 5, "hair_dark")
+        r(14, 20, 4, 5, "hair")
+        r(14, 22, 2, 1, "hair_light")
+        r(16, 24, 2, 1, "hair_light")
+        r(14, 25, 4, 1, "gold")
+        p("M5 12V8h2V5h4V3h11v2h4v3h1v4z", "ink")
+        p("M7 11V8h2V6h4V4h8v2h3v2h1v3z", "cloth")
+        r(6, 10, 20, 3, "cloth_dark")
+        r(7, 10, 18, 1, "cloth_light")
+        for x in (9, 13, 17, 21):
+            r(x, 11, 1, 1, "cloth")
+        r(15, 5, 1, 5, "cloth_light")
+    d.end()
+    if kind == "wizard":
+        r(3, 24, 2, 13, "ink")
+        r(4, 25, 1, 11, "boot_light")
+        p("M2 21h4v2h1v3H6v1H2v-1H1v-3h1z", "ink")
+        r(2, 23, 4, 3, "potion")
+        r(3, 22, 2, 1, "hair_light")
+    d.parts.append('</svg>')
+    return '\n'.join(d.parts) + '\n'
+
+
+def draw(kind, pose, skin=None, back=False, profile=False):
+    if profile:
+        return draw_profile(kind, pose, PALETTE | THEMES[kind] | (skin or {}))
+    if back:
+        return draw_rear(kind, pose, skin)
+    d = Drawing(kind, pose, skin)
+    r, p = d.rect, d.path
+    draw_limbs(d, pose)
     d.group(pose["lift"])
     p("M10 23h12v2h2v6h-2v5H9v-5H7v-6h3z", "ink")
     p("M10 24h11v2h2v4h-2v5H10v-5H8v-4h2z", "cloth_dark")
@@ -201,14 +319,15 @@ def main():
     for kind in THEMES:
         folder = OUT / kind
         folder.mkdir(parents=True, exist_ok=True)
-        frames = []
-        for pose in POSES:
-            svg = folder / (pose["name"] + ".svg")
-            png = folder / (pose["name"] + ".png")
-            svg.write_text(draw(kind, pose))
-            subprocess.run(["magick", "-background", "none", str(svg), str(png)], check=True)
-            frames.append(str(png))
-        subprocess.run(["magick", *frames, "+append", str(OUT / f"{kind}_idle.png")], check=True)
+        for view in ("front", "back", "profile"):
+            for pose in ALL_POSES:
+                name = (view + "_" if view != "front" else "") + pose["name"]
+                svg, png = folder / (name + ".svg"), folder / (name + ".png")
+                svg.write_text(draw(kind, pose, back=view == "back", profile=view == "profile"))
+                subprocess.run(["magick", "-background", "none", str(svg), str(png)], check=True)
+        pack_rows(folder, ("idle",), OUT / f"{kind}_idle.png")
+        prefixes = ("idle", "walk", "back_idle", "back_walk", "profile_idle", "profile_walk")
+        pack_rows(folder, prefixes, OUT / f"{kind}_sheet.png")
         # Bake skin-only variants into atlas rows. Recoloring semantic skin
         # shapes here preserves eyes, outlines, hair, clothing and accessories.
         # Temporary files are intermediates; the palette JSON is the source.
@@ -219,14 +338,14 @@ def main():
             for row, skin in enumerate(skins):
                 frames = []
                 colors = {key: value for key, value in skin.items() if key != "name"}
-                for pose in POSES:
-                    svg = temp / (pose["name"] + ".svg")
-                    png = temp / (pose["name"] + ".png")
-                    svg.write_text(draw(kind, pose, colors))
-                    subprocess.run(["magick", "-background", "none", str(svg), str(png)], check=True)
-                    frames.append(str(png))
+                for view in ("front", "back", "profile"):
+                    for pose in ALL_POSES:
+                        name = (view + "_" if view != "front" else "") + pose["name"]
+                        svg, png = temp / (name + ".svg"), temp / (name + ".png")
+                        svg.write_text(draw(kind, pose, colors, back=view == "back", profile=view == "profile"))
+                        subprocess.run(["magick", "-background", "none", str(svg), str(png)], check=True)
                 strip = temp / f"row_{row}.png"
-                subprocess.run(["magick", *frames, "+append", str(strip)], check=True)
+                pack_rows(temp, prefixes, strip)
                 rows.append(str(strip))
             subprocess.run(["magick", *rows, "-append", str(OUT / f"{kind}_fantasy.png")], check=True)
 

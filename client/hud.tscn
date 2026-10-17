@@ -32,7 +32,7 @@ offset_bottom = 132.0
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="QueueTitle" type="Label" parent="Root/Orders"]
+[node name="OrdersTitle" type="Label" parent="Root/Orders"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.86, 0.8, 0.68, 1)
 theme_override_font_sizes/font_size = 14

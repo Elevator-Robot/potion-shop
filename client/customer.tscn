@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://client/customer.gd" id="1_customer"]
 [ext_resource type="Texture2D" path="res://assets/customers/cozy/elf_fantasy.png" id="2_sprite"]
-[ext_resource type="Texture2D" path="res://assets/customers/order_bottle.svg" id="3_bottle"]
+[ext_resource type="Script" path="res://client/item_icon.gd" id="3_bottle"]
+[ext_resource type="Texture2D" path="res://assets/ui/order_bubble.svg" id="4_bubble"]
 
 [node name="Customer" type="Node2D"]
 script = ExtResource("1_customer")
@@ -17,14 +18,22 @@ scale = Vector2(1.25, 1.25)
 texture_filter = 1
 texture = ExtResource("2_sprite")
 hframes = 4
-vframes = 8
+vframes = 48
+frame = 8
+
+[node name="OrderBubble" type="Sprite2D" parent="."]
+z_index = 8
+position = Vector2(0, -84)
+texture_filter = 1
+texture = ExtResource("4_bubble")
 
 [node name="OrderIcon" type="Sprite2D" parent="."]
-position = Vector2(23, -17)
-texture = ExtResource("3_bottle")
-modulate = Color(0.96, 0.4, 0.55, 1)
+z_index = 8
+position = Vector2(0, -88)
+script = ExtResource("3_bottle")
 
 [node name="AngryMark" type="Label" parent="."]
+z_index = 8
 visible = false
 offset_left = 14.0
 offset_top = -52.0
@@ -38,19 +47,22 @@ text = "!"
 mouse_filter = 2
 
 [node name="OrderLabel" type="Label" parent="."]
+z_index = 8
+visible = false
 offset_left = -44.0
-offset_top = -78.0
+offset_top = -100.0
 offset_right = 44.0
-offset_bottom = -63.0
+offset_bottom = -72.0
 mouse_filter = 2
 theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.12, 1)
 theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 11
-text = "Healing"
+theme_override_font_sizes/font_size = 22
+text = "♥"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="BarBg" type="ColorRect" parent="."]
+z_index = 8
 offset_left = -20.0
 offset_top = -61.0
 offset_right = 20.0
@@ -59,6 +71,7 @@ mouse_filter = 2
 color = Color(0.15, 0.12, 0.12, 1)
 
 [node name="BarFill" type="ColorRect" parent="."]
+z_index = 8
 offset_left = -20.0
 offset_top = -61.0
 offset_right = 20.0

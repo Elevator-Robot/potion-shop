@@ -1,12 +1,12 @@
 extends CanvasLayer
-## The shop HUD: the queued orders and their patience bars, the day and the
+## The shop HUD: visitor orders and patience bars, the day and the
 ## clock, the coins, the reputation, and what pressing interact would do where
 ## we are standing. It draws what it is told and counts down locally from the
 ## authority's timestamps; it never changes any game state.
 
 const Game = preload("res://network/game.gd")
+const ItemTile = preload("res://client/item_tile.gd")
 
-const ROW_NAME_WIDTH := 74.0
 const ROW_BAR_WIDTH := 104.0
 const CALM_TEXT := Color(0.93, 0.9, 0.82, 1.0)
 const ANGRY_TEXT := Color(0.98, 0.5, 0.42, 1.0)
@@ -27,6 +27,7 @@ const ANGRY_TEXT := Color(0.98, 0.5, 0.42, 1.0)
 var _doc := {}
 var _local_at := 0.0
 var _rows: Array = []
+var _recipe_panel: PanelContainer
 
 
 func _ready() -> void:
@@ -34,7 +35,61 @@ func _ready() -> void:
 	hold_bar.max_value = 1.0
 	hold_bar.visible = false
 	serve_flash.visible = false
+	_build_recipes()
 	_refresh()
+
+
+func _build_recipes() -> void:
+	_recipe_panel = PanelContainer.new()
+	_recipe_panel.position = Vector2(16, 170)
+	_recipe_panel.visible = false
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("191d2c")
+	style.border_color = Color("897087")
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(4)
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.45)
+	style.shadow_size = 8
+	_recipe_panel.add_theme_stylebox_override("panel", style)
+	var margin := MarginContainer.new()
+	for side in ["left", "top", "right", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 16)
+	var pages := VBoxContainer.new()
+	var title := Label.new()
+	title.text = "MATCH THE SHAPES   ·   R to close"
+	title.add_theme_font_size_override("font_size", 16)
+	pages.add_child(title)
+	for potion in Game.POTIONS:
+		var row := HBoxContainer.new()
+		row.name = "Recipe_" + str(potion)
+		row.add_theme_constant_override("separation", 10)
+		var needs := Game.recipe_needs(potion)
+		var index := 0
+		for ingredient in needs:
+			if index > 0:
+				var plus := Label.new()
+				plus.text = "+"
+				row.add_child(plus)
+			var tile := ItemTile.new()
+			tile.setup(ingredient)
+			row.add_child(tile)
+			index += 1
+		var arrow := Label.new()
+		arrow.text = "→"
+		row.add_child(arrow)
+		var result := ItemTile.new()
+		result.setup(potion, Vector2(64, 64))
+		row.add_child(result)
+		pages.add_child(row)
+	var hint := Label.new()
+	hint.text = "Add the two ingredients. Collect the bottle.\nMatch the bottle beside your customer."
+	pages.add_child(hint)
+	margin.add_child(pages)
+	_recipe_panel.add_child(margin)
+	$Root.add_child(_recipe_panel)
+
+func toggle_recipes() -> void:
+	_recipe_panel.visible = not _recipe_panel.visible
 
 
 func _process(_delta: float) -> void:
@@ -104,7 +159,9 @@ func clear_status() -> void:
 static func refuse_text(reason: String) -> String:
 	match reason:
 		"too_far":
-			return "Stand closer to the station"
+			return "Move closer to interact"
+		"blocked":
+			return "Walk around to the open side"
 		"wrong_station":
 			return "That is not done here"
 		"not_joined":
@@ -121,10 +178,12 @@ static func refuse_text(reason: String) -> String:
 			return "Storage is empty"
 		"storage_full":
 			return "Storage is full"
-		"already_prepped":
-			return "That is already chopped"
-		"needs_prep":
-			return "Chop it at the prep station first"
+		"wrong_shelf":
+			return "That ingredient belongs on a different shelf"
+		"shelf_full":
+			return "That shelf is full"
+		"not_an_ingredient":
+			return "The cauldron needs an ingredient"
 		"not_a_recipe":
 			return "The cauldron will not take that"
 		"already_brewing":
@@ -169,10 +228,10 @@ func _refresh_orders(server_now: float, now: int) -> void:
 		var total := maxf(float(entry.get("patience_seconds", 1.0)), 0.001)
 		var remaining := maxf(Game.seconds_left(float(entry.get("deadline_msec", 0.0)), server_now, _local_at, now), 0.0)
 		var angry := bool(entry.get("angry", false))
-		var name_label: Label = row["name"]
+		var icon: Control = row["icon"]
 		var bar: ProgressBar = row["bar"]
-		name_label.text = "%d. %s" % [i + 1, Game.item_label(str(entry.get("order", "")))]
-		name_label.add_theme_color_override("font_color", ANGRY_TEXT if angry else CALM_TEXT)
+		icon.setup(str(entry.get("order", "")), Vector2(36, 40))
+		icon.modulate = Color(1, 1, 1, 0.35) if entry.get("phase", "") == "leaving" else Color.WHITE
 		bar.value = clampf(remaining / total, 0.0, 1.0)
 		bar.modulate = ANGRY_TEXT if angry else Color(1.0, 1.0, 1.0, 1.0)
 	for i in range(customers.size(), _rows.size()):
@@ -180,24 +239,22 @@ func _refresh_orders(server_now: float, now: int) -> void:
 		(row["row"] as Control).visible = false
 
 
-## One queue row: the customer's place and order, and a bar that drains as
+## One order row: the customer's order, and a bar that drains as
 ## their patience does. Rows are built once and then only updated.
 func _row(index: int) -> Dictionary:
 	while _rows.size() <= index:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 6)
-		var name_label := Label.new()
-		name_label.custom_minimum_size = Vector2(ROW_NAME_WIDTH, 0.0)
-		name_label.add_theme_font_size_override("font_size", 13)
+		var icon := ItemTile.new()
 		var bar := ProgressBar.new()
 		bar.custom_minimum_size = Vector2(ROW_BAR_WIDTH, 13.0)
 		bar.max_value = 1.0
 		bar.value = 1.0
 		bar.show_percentage = false
-		row.add_child(name_label)
+		row.add_child(icon)
 		row.add_child(bar)
 		orders.add_child(row)
-		_rows.append({"row": row, "name": name_label, "bar": bar})
+		_rows.append({"row": row, "icon": icon, "bar": bar})
 	var built: Dictionary = _rows[index]
 	(built["row"] as Control).visible = true
 	return built

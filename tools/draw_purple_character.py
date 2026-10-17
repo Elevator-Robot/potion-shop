@@ -8,6 +8,7 @@ The generated SVGs are also retained as individually editable frame artwork.
 
 from pathlib import Path
 import subprocess
+from profile_art import draw_profile
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets/characters/purple_shopkeeper"
@@ -78,6 +79,26 @@ def head(dy, blink, curl):
     return ''.join(pieces)
 
 
+def head_back(dy, curl):
+    """Rear hair mass, visible ear backs and opposite-side flower; no face."""
+    p = [f'<g transform="translate(0 {dy})">']
+    p += [path("M12 1h8v1h4v2h3v4h2v14h1v5h-3v2h-5v-3H9v3H4v-2H2v-5h1V9h2V5h3V3h4z", "ink")]
+    p += [path("M1 13h5v2h2v5H5v-1H3v-2H1zM26 13h5v4h-2v2h-2v1h-3v-5h2z", "ink")]
+    p += [path("M2 14h4v2h1v3H5v-2H3v-1H2zM26 14h4v2h-1v1h-2v2h-2v-3h1z", "skin_shadow")]
+    p += [rect(2, 14, 3, 1, "skin"), rect(27, 14, 3, 1, "skin")]
+    p += [path("M12 3h8v1h4v2h2v4h1v12h1v3h-3v2h-2v-3H8v3H5v-2H4v-3h1V10h2V6h5z", "hair_dark")]
+    p += [path("M11 4h10v2h3v4h1v11h-2v3H10v-2H7V10h1V7h3z", "hair")]
+    p += [path("M11 6h9v1h3v3H10v3H8v-3h1V7h2z", "hair_mid")]
+    p += [rect(11, 6, 8, 1, "hair_light"), rect(16, 3, 3, 1, "hair_light")]
+    p += [path("M15 10h2v4h-1v5h1v5h-3v-6h1zM9 12h1v7H9zM22 12h1v9h-2v-5h1z", "hair_dark")]
+    p += [rect(11, 13, 1, 7, "hair_mid"), rect(19, 12, 1, 8, "hair_mid")]
+    p += [path(f"M4 18h2v4H5v{3 + curl}H3v-2h1z", "hair"), path(f"M26 18h2v5h1v{3 - curl}h-3v-2h1v-3h-1z", "hair")]
+    p += [rect(4, 23 + curl, 2, 1, "hair_mid"), rect(26, 24 - curl, 2, 1, "hair_mid")]
+    p += [rect(6, 8, 2, 5, "hair_light"), rect(4, 10, 6, 1, "hair_light"), rect(6, 10, 2, 1, "gold")]
+    p += ['</g>']
+    return ''.join(p)
+
+
 # Each frame has its own authored limb placement and expression. The walk is
 # contact -> passing -> opposite contact -> passing, not translated copies.
 POSES = [
@@ -92,9 +113,9 @@ POSES = [
 ]
 
 
-def draw(pose):
+def draw(pose, back=False):
     p = ['<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40" shape-rendering="crispEdges">']
-    p += [f'<title>Purple shopkeeper — {pose["name"]}</title>']
+    p += [f'<title>Purple shopkeeper — {"back_" if back else ""}{pose["name"]}</title>']
     for foot in pose["feet"]:
         p.append(boot(*foot))
     # Little cape, sage sleeves, blue apron, gold fastening and a potion pocket.
@@ -107,21 +128,32 @@ def draw(pose):
     p += [path("M10 28h11v3h1v4H10v1H9v-5h1z", "apron_dark")]
     p += [path("M11 28h9v3h1v3H10v-3h1z", "apron")]
     p += [rect(11, 28, 1, 5, "apron_light"), rect(12, 28, 7, 1, "apron_light"), rect(10, 34, 11, 1, "apron_light")]
-    p += [rect(14, 26, 3, 2, "gold"), rect(15, 26, 1, 1, "cream")]
-    p += [rect(17, 30, 3, 4, "apron_dark"), rect(18, 30, 1, 1, "gold"), rect(18, 31, 2, 2, "potion"), rect(18, 31, 1, 1, "cream")]
-    p += ['</g>', head(pose["head"], pose["blink"], pose["curl"]), '</svg>']
+    if back:
+        # Apron ties on the back replace the front pocket and gold clasp.
+        p += [rect(10, 29, 11, 1, "cream"), rect(13, 28, 2, 3, "apron_light"), rect(16, 28, 2, 3, "apron_light"), rect(15, 29, 1, 4, "cream")]
+    else:
+        p += [rect(14, 26, 3, 2, "gold"), rect(15, 26, 1, 1, "cream")]
+        p += [rect(17, 30, 3, 4, "apron_dark"), rect(18, 30, 1, 1, "gold"), rect(18, 31, 2, 2, "potion"), rect(18, 31, 1, 1, "cream")]
+    p += ['</g>', head_back(pose["head"], pose["curl"]) if back else head(pose["head"], pose["blink"], pose["curl"]), '</svg>']
     return '\n'.join(p) + '\n'
+
+
+def pack_rows(folder, prefixes, output):
+    command = ["magick"]
+    for prefix in prefixes:
+        command += ["(", *[str(folder / f"{prefix}_{i}.png") for i in range(4)], "+append", ")"]
+    subprocess.run([*command, "-append", str(output)], check=True)
 
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    for pose in POSES:
-        svg = OUT / (pose["name"] + ".svg")
-        png = OUT / (pose["name"] + ".png")
-        svg.write_text(draw(pose))
-        subprocess.run(["magick", "-background", "none", str(svg), str(png)], check=True)
-    # A 128x80 atlas: idle on top, walking below, four 32x40 cells per row.
-    subprocess.run(["magick", "(", *[str(OUT / f"idle_{i}.png") for i in range(4)], "+append", ")", "(", *[str(OUT / f"walk_{i}.png") for i in range(4)], "+append", ")", "-append", str(OUT / "sheet.png")], check=True)
+    for view in ("front", "back", "profile"):
+        for pose in POSES:
+            name = (view + "_" if view != "front" else "") + pose["name"]
+            svg, png = OUT / (name + ".svg"), OUT / (name + ".png")
+            svg.write_text(draw_profile("renna", pose, PALETTE) if view == "profile" else draw(pose, view == "back"))
+            subprocess.run(["magick", "-background", "none", str(svg), str(png)], check=True)
+    pack_rows(OUT, ("idle", "walk", "back_idle", "back_walk", "profile_idle", "profile_walk"), OUT / "sheet.png")
 
 
 if __name__ == "__main__":

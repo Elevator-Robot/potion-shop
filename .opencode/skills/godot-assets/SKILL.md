@@ -46,6 +46,11 @@ description: Create, redraw, animate, import, or visually verify Potion Shop spr
 - **Timing:** hold idle poses and make blinks brief; do not give every frame equal
   duration blindly. Drive steps from actual distance, returning to idle when
   blocked. Art transforms must not alter collision or authority movement.
+- **Visual matching:** every ingredient and potion is its own reusable animated
+  asset. Use the exact same silhouette/color on shelves, in recipes and beside
+  customers. Furniture artwork must be empty; actual item sprites sit on board
+  anchors, with stock controlling visibility. Do not bake inventory into shelves
+  or rely on item-name labels to compensate for indistinct silhouettes.
 - **Scale:** judge at game resolution, not only an enlarged contact sheet. Compare
   visible body height as well as canvas height; transparent padding affects scale.
   Nearest filtering preserves pixel edges, but non-integer scaling can produce

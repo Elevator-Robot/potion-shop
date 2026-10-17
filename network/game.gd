@@ -13,9 +13,8 @@ const PLAYER_RADIUS := 10.0
 ## Where a player centre may legally be: the interior inset by the player
 ## radius (10, 10 to 630, 410).
 const PLAY_BOUNDS := Rect2(10.0, 10.0, 620.0, 400.0)
-## Frame the raised stone back wall, cutaway sides and the customer queue below
-## the shop. This visual framing does not change the playable room bounds.
-const CAMERA_RECT := Rect2(-48.0, -112.0, 736.0, 640.0)
+## Frame the building, including the raised back wall and cutaway front.
+const CAMERA_RECT := Rect2(-48.0, -116.0, 736.0, 580.0)
 
 const WALK_SPEED := 120.0     # px/s, flat top-down 8-direction walking
 const MAX_SPEED := 240.0      # the authority's sanity bound, above WALK_SPEED
@@ -23,8 +22,8 @@ const SEND_INTERVAL := 1.0 / 20.0
 
 ## One spawn point per seat, in pixels: side by side on the free middle of the
 ## shop floor, clear of every station.
-const SPAWN_POINTS := [Vector2(280.0, 240.0), Vector2(360.0, 240.0)]
-## Both players spawn facing the serving counter (down the screen, +y).
+const SPAWN_POINTS := [Vector2(280.0, 252.0), Vector2(312.0, 252.0)]
+## Both players initially face into the room (down the screen, +y).
 const SPAWN_FACING := 1.5707964
 
 ## Placeholder tints by seat: 0 is green-teal (P1), 1 is purple (P2).
@@ -41,71 +40,73 @@ const TINT_P2 := Color(0.62, 0.42, 0.92, 1.0)
 const MOONLEAF := "moonleaf"
 const FIRECAP := "firecap"
 const WATERBLOOM := "waterbloom"
-const RAW_ITEMS := [MOONLEAF, FIRECAP, WATERBLOOM]
+const RAW_ITEMS := [MOONLEAF, FIRECAP, WATERBLOOM, "void_eye", "blood_root", "ghost_moth", "bone_shard", "dusk_crystal", "slime_pearl", "raven_feather", "ember_heart", "silver_spore"]
 const HEALING_POTION := "healing_potion"
 const MANA_POTION := "mana_potion"
 const EMBER_TONIC := "ember_tonic"
-const POTIONS := [HEALING_POTION, MANA_POTION, EMBER_TONIC]
-
-## A raw ingredient becomes its prepped form at the prep station; the cauldron
-## brews the prepped ones back down to the raw ingredients a recipe calls for.
-const PREPPED_SUFFIX := "_prepped"
+const POTIONS := [HEALING_POTION, MANA_POTION, EMBER_TONIC, "veil_draught", "venom_elixir", "spirit_dew"]
+const ALL_ITEMS := RAW_ITEMS + POTIONS
 
 ## potion id -> the raw ingredients it needs, its brew time, its coin reward.
 const RECIPES := {
-	HEALING_POTION: {"needs": {MOONLEAF: 1, FIRECAP: 1, WATERBLOOM: 1}, "brew": 5.0, "reward": 12},
-	MANA_POTION: {"needs": {WATERBLOOM: 2, MOONLEAF: 1}, "brew": 4.0, "reward": 10},
-	EMBER_TONIC: {"needs": {FIRECAP: 2, MOONLEAF: 1}, "brew": 6.0, "reward": 16},
+	HEALING_POTION: {"needs": {MOONLEAF: 1, FIRECAP: 1}, "brew": 5.0, "reward": 12},
+	MANA_POTION: {"needs": {WATERBLOOM: 1, "silver_spore": 1}, "brew": 4.0, "reward": 12},
+	EMBER_TONIC: {"needs": {"bone_shard": 1, "ember_heart": 1}, "brew": 6.0, "reward": 16},
+	"veil_draught": {"needs": {"void_eye": 1, "dusk_crystal": 1}, "brew": 5.5, "reward": 16},
+	"venom_elixir": {"needs": {"blood_root": 1, "slime_pearl": 1}, "brew": 4.5, "reward": 14},
+	"spirit_dew": {"needs": {"ghost_moth": 1, "raven_feather": 1}, "brew": 6.0, "reward": 18},
 }
 
 ## What each item is called on screen, and its flat placeholder colour.
 const ITEM_LABELS := {
 	MOONLEAF: "Moonleaf", FIRECAP: "Firecap", WATERBLOOM: "Waterbloom",
-	"moonleaf_prepped": "Chopped Moonleaf",
-	"firecap_prepped": "Chopped Firecap",
-	"waterbloom_prepped": "Chopped Waterbloom",
 	HEALING_POTION: "Healing", MANA_POTION: "Mana", EMBER_TONIC: "Ember",
 }
 const ITEM_COLORS := {
 	MOONLEAF: Color(0.48, 0.86, 0.55, 1.0),
 	FIRECAP: Color(0.92, 0.42, 0.28, 1.0),
 	WATERBLOOM: Color(0.42, 0.66, 0.96, 1.0),
-	"moonleaf_prepped": Color(0.28, 0.66, 0.4, 1.0),
-	"firecap_prepped": Color(0.7, 0.26, 0.18, 1.0),
-	"waterbloom_prepped": Color(0.25, 0.45, 0.72, 1.0),
-	HEALING_POTION: Color(0.96, 0.4, 0.55, 1.0),
-	MANA_POTION: Color(0.5, 0.6, 0.98, 1.0),
-	EMBER_TONIC: Color(0.98, 0.64, 0.22, 1.0),
+	HEALING_POTION: Color("cf456f"),
+	MANA_POTION: Color("438fdf"),
+	EMBER_TONIC: Color("e49c37"),
+	"veil_draught": Color("9762d6"), "venom_elixir": Color("8bbf40"), "spirit_dew": Color("dfb7ca"),
 }
 
-## The six stations' interaction points in pixels: the spot just outside each
-## station's body where a player stands to use it. The shelves, the storage and
-## the counter are entered from the room side; the bottling station from the
-## left.
-const STATIONS := {
-	"shelves": Vector2(70.0, 170.0),
-	"storage": Vector2(110.0, 320.0),
-	"prep": Vector2(200.0, 112.0),
-	"cauldron": Vector2(450.0, 119.0),
-	"bottling": Vector2(530.0, 220.0),
-	"counter": Vector2(400.0, 336.0),
+## Feet anchors of the furniture. Art, interaction and navigation use this one
+## layout; the tall parts of shelves are above their shallow collision bases.
+const FURNITURE := {
+	"moon_west": {"kind": "shelf", "stock": [MOONLEAF, FIRECAP, WATERBLOOM], "at": Vector2(88, 112), "variant": 0},
+	"fire_north": {"kind": "shelf", "stock": ["void_eye", "blood_root", "ghost_moth"], "at": Vector2(216, 112), "variant": 1},
+	"water_east": {"kind": "shelf", "stock": ["bone_shard", "dusk_crystal", "slime_pearl"], "at": Vector2(560, 112), "variant": 2},
+	"moon_island": {"kind": "shelf", "stock": ["raven_feather", "ember_heart", "silver_spore"], "at": Vector2(224, 272), "variant": 3},
+	"fire_east": {"kind": "shelf", "stock": [MOONLEAF, "void_eye", "bone_shard", "raven_feather"], "at": Vector2(544, 272), "variant": 4},
+	"water_south": {"kind": "shelf", "stock": POTIONS, "at": Vector2(512, 376), "variant": 5},
+	"moon_nook": {"kind": "shelf", "stock": [FIRECAP, "blood_root", "dusk_crystal", "ember_heart"], "at": Vector2(96, 272), "variant": 6},
+	"fire_low": {"kind": "shelf", "stock": [WATERBLOOM, "ghost_moth", "slime_pearl", "silver_spore"], "at": Vector2(160, 376), "variant": 7},
+	"water_north": {"kind": "shelf", "stock": POTIONS, "at": Vector2(432, 112), "variant": 8},
+	"storage_west": {"kind": "storage", "at": Vector2(64, 360), "approach": Vector2(44, -30)},
+	"storage_south": {"kind": "storage", "at": Vector2(320, 376)},
+	"cauldron": {"kind": "cauldron", "at": Vector2(400, 272)},
 }
-
-## The three shelf piles along the left wall, one per raw ingredient: the spot
-## a player stands on to take that ingredient.
-const SHELF_SPOTS := {
-	MOONLEAF: Vector2(70.0, 96.0),
-	FIRECAP: Vector2(70.0, 170.0),
-	WATERBLOOM: Vector2(70.0, 244.0),
+## Board rows of empty library furniture, in native 64x80 sprite coordinates.
+## Runtime item nodes are anchored to these boards, independently of the wood art.
+const SHELF_ROWS := [[28, 50, 72], [32, 52, 72], [32, 52, 72], [30, 51, 72], [32, 52, 72], [48, 72], [30, 51, 72], [48, 72], [48, 72]]
+const CLUTTER := {
+	"basket": {"at": Vector2(80, 408), "size": Vector2(56, 16), "variant": 0},
+	"books": {"at": Vector2(272, 340), "size": Vector2(40, 12), "variant": 1},
+	"bottles": {"at": Vector2(604, 338), "size": Vector2(44, 14), "variant": 2},
 }
+static var _polygons := {}
+const DOOR_ENTRY := Vector2(320, -18)
+const DOOR_POINT := Vector2(320, 32)
+const CUSTOMER_SPEED := 52.0
+const BROWSE_POINTS := [Vector2(136, 168), Vector2(272, 160), Vector2(496, 160), Vector2(488, 304), Vector2(224, 328), Vector2(400, 352), Vector2(112, 328), Vector2(304, 192)]
 
 ## How close a player must stand to use a station, and the slack the authority
 ## adds because a Command is checked a few milliseconds after the pose it was
 ## sent alongside.
-const INTERACT_RADIUS := 34.0
+const INTERACT_RADIUS := 44.0
 const INTERACT_SLACK := 14.0
-## How long the interact action must be held to chop something.
-const PREP_HOLD_SECONDS := 1.0
 
 ## Day and difficulty. Customers arrive faster and wait less every day.
 const DAY_SECONDS := 120.0
@@ -113,27 +114,19 @@ const REPUTATION_START := 50
 const REPUTATION_MAX := 100
 const REPUTATION_GAIN := 4
 const REPUTATION_LOSS := 6
-const MAX_QUEUE := 4
-const ARRIVAL_BASE_SECONDS := 11.0
-const ARRIVAL_MIN_SECONDS := 4.5
+const MAX_CUSTOMERS := 4
+const ARRIVAL_BASE_SECONDS := 14.0
+const ARRIVAL_MIN_SECONDS := 8.0
 const ARRIVAL_SPEEDUP := 0.85
-const PATIENCE_BASE_SECONDS := 45.0
-const PATIENCE_MIN_SECONDS := 18.0
+const PATIENCE_BASE_SECONDS := 90.0
+const PATIENCE_MIN_SECONDS := 45.0
 const PATIENCE_SPEEDUP := 0.9
 ## How long an angry customer keeps standing there before they walk off.
 const ANGRY_SHOW_MSEC := 1200
 const SHELF_START_STOCK := 6
 const SHELF_RESTOCK := 4
 const SHELF_MAX_STOCK := 12
-const STORAGE_CAPACITY := 6
-
-## Where queued customers stand, first in line nearest the counter.
-const QUEUE_SLOTS := [
-	Vector2(400.0, 470.0),
-	Vector2(344.0, 470.0),
-	Vector2(288.0, 470.0),
-	Vector2(232.0, 470.0),
-]
+const STORAGE_CAPACITY := 12
 
 ## How often the authority re-sends the Shop document even when nothing
 ## changed, so late joiners and a lossy network always catch up.
@@ -187,21 +180,11 @@ static func seat_color(seat: int) -> Color:
 ## Item helpers.
 ## ---------------------------------------------------------------------------
 
-## A raw ingredient's prepped id, and back again.
-static func prepped_of(raw: String) -> String:
-	return raw + PREPPED_SUFFIX
-
-
-static func raw_of(item: String) -> String:
-	return item.trim_suffix(PREPPED_SUFFIX)
-
-
 static func is_raw(item: String) -> bool:
 	return RAW_ITEMS.has(item)
 
-
-static func is_prepped(item: String) -> bool:
-	return item.ends_with(PREPPED_SUFFIX) and RAW_ITEMS.has(raw_of(item))
+static func is_item(item: String) -> bool:
+	return ALL_ITEMS.has(item)
 
 
 static func is_potion(item: String) -> bool:
@@ -231,13 +214,83 @@ static func reward(potion: String) -> int:
 ## ---------------------------------------------------------------------------
 
 static func station_point(station: String) -> Vector2:
-	var point: Vector2 = STATIONS.get(station, Vector2.ZERO)
-	return point
+	if station == "door":
+		return DOOR_POINT
+	var data: Dictionary = FURNITURE.get(station, {})
+	var anchor: Vector2 = data.get("at", Vector2.ZERO)
+	return anchor + (data.get("approach", Vector2(0, 28)) as Vector2)
 
 
 static func shelf_spot(raw: String) -> Vector2:
-	var point: Vector2 = SHELF_SPOTS.get(raw, Vector2.ZERO)
-	return point
+	return station_point(shelf_id(raw))
+
+
+static func shelf_id(raw: String) -> String:
+	for id in FURNITURE:
+		if shelf_items(id).has(raw):
+			return id
+	return ""
+
+static func shelf_items(id: String) -> Array:
+	return FURNITURE.get(id, {}).get("stock", [])
+
+static func shelf_slots(id: String) -> Array[Vector2]:
+	var result: Array[Vector2] = []
+	for row in SHELF_ROWS[int(FURNITURE[id]["variant"])]:
+		for x in [14, 32, 50]:
+			result.append(Vector2(x - 32, row - 80) * 1.5)
+	return result
+
+
+static func furniture_rect(id: String) -> Rect2:
+	var points := furniture_polygon(id)
+	var bounds := Rect2(points[0], Vector2.ZERO)
+	for point in points:
+		bounds = bounds.expand(point)
+	return bounds
+
+
+static func furniture_polygon(id: String) -> PackedVector2Array:
+	if _polygons.has(id):
+		return _polygons[id]
+	var points := PackedVector2Array()
+	var data: Dictionary = FURNITURE.get(id, CLUTTER.get(id, {}))
+	var anchor: Vector2 = data["at"]
+	if data.get("kind", "") == "shelf":
+		for point in [Vector2(-42, -28), Vector2(42, -28), Vector2(42, 0), Vector2(-42, 0)]:
+			points.append(anchor + point)
+	elif data.get("kind", "") == "cauldron":
+		for point in [Vector2(-26, -42), Vector2(26, -42), Vector2(36, -26), Vector2(30, -4), Vector2(-30, -4), Vector2(-36, -26)]:
+			points.append(anchor + point)
+	else:
+		var size: Vector2 = data.get("size", Vector2(58, 32))
+		for point in [Vector2(-size.x / 2, -size.y), Vector2(size.x / 2, -size.y), Vector2(size.x / 2, 0), Vector2(-size.x / 2, 0)]:
+			points.append(anchor + point)
+	_polygons[id] = points
+	return points
+
+
+static func floor_clear(point: Vector2, radius: float = 10.0) -> bool:
+	if not in_bounds(point):
+		return false
+	for id in FURNITURE.keys() + CLUTTER.keys():
+		var polygon := furniture_polygon(id)
+		if Geometry2D.is_point_in_polygon(point, polygon):
+			return false
+		for i in polygon.size():
+			var closest := Geometry2D.get_closest_point_to_segment(point, polygon[i], polygon[(i + 1) % polygon.size()])
+			if point.distance_squared_to(closest) < pow(maxf(radius - 0.05, 0.0), 2):
+				return false
+	return true
+
+
+static func motion_clear(from: Vector2, to: Vector2, radius: float = PLAYER_RADIUS) -> bool:
+	# Check the complete travel segment, not just a destination on the far side.
+	var steps := maxi(1, ceili(from.distance_to(to) / 2.0))
+	for i in range(steps + 1):
+		if not floor_clear(from.lerp(to, float(i) / steps), radius):
+			return false
+	return true
 
 
 ## Seconds between customers on `day`: every day they come a little faster.
@@ -290,8 +343,8 @@ static func _counts(contents: Array) -> Dictionary:
 ## True while nothing in `contents` overshoots what `needs` asks for.
 static func _within(contents: Array, needs: Dictionary) -> bool:
 	var counts := _counts(contents)
-	for raw in needs:
-		if int(counts.get(str(raw), 0)) > int(needs[raw]):
+	for raw in counts:
+		if not needs.has(raw) or int(counts[raw]) > int(needs[raw]):
 			return false
 	return true
 

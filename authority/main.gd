@@ -5,10 +5,6 @@ extends RefCounted
 const Game = preload("res://network/game.gd")
 const Shop = preload("res://authority/shop.gd")
 const BURST := Game.MAX_SPEED * 0.5
-const STATION_OF := {
-	"put": "storage", "prep": "prep", "add": "cauldron",
-	"bottle": "bottling", "serve": "counter",
-}
 
 var shop := Shop.new()
 var players := {} # peer id -> accepted pose
@@ -45,7 +41,7 @@ func leave(peer: int) -> void:
 
 
 func move(peer: int, position: Vector2, facing: float) -> bool:
-	if not players.has(peer) or not Game.in_bounds(position) or not is_finite(facing):
+	if not players.has(peer) or not Game.floor_clear(position) or not is_finite(facing):
 		return false
 	var now := Time.get_ticks_msec()
 	var budget := minf(float(allowance[peer]) + Game.MAX_SPEED * float(now - int(refilled_at[peer])) / 1000.0, BURST)
@@ -53,7 +49,7 @@ func move(peer: int, position: Vector2, facing: float) -> bool:
 	var previous: Vector2 = players[peer]["position"]
 	var distance := previous.distance_to(position)
 	allowance[peer] = budget
-	if distance > budget:
+	if distance > budget or not Game.motion_clear(previous, position, Game.PLAYER_RADIUS - 0.5):
 		return false
 	allowance[peer] = budget - distance
 	players[peer]["position"] = position
@@ -76,27 +72,48 @@ func command(peer: int, id: int, action: String, station: String, item: String) 
 
 func _apply(peer: int, action: String, station: String, item: String) -> Dictionary:
 	var point: Variant = null
-	if action == "take":
-		if item != "" and station == "shelves" and Game.SHELF_SPOTS.has(item):
-			point = Game.shelf_spot(item)
-		elif item == "" and station == "storage":
-			point = Game.station_point("storage")
-	elif STATION_OF.has(action) and station == STATION_OF[action]:
-		point = Game.station_point(station)
+	if station == "door" and action == "door":
+		point = Game.DOOR_POINT
+	elif station == "customer" and action in ["serve", "talk"] and item.is_valid_int():
+		var customer := shop.get_customer(int(item))
+		if customer.is_empty() or customer["phase"] == "leaving":
+			return _no("no_customer")
+		point = customer["position"]
+	elif Game.FURNITURE.has(station):
+		var data: Dictionary = Game.FURNITURE[station]
+		match data["kind"]:
+			"shelf":
+				if action in ["take", "restock"] and Game.shelf_items(station).has(item):
+					point = Game.station_point(station)
+			"storage":
+				if action in ["take", "put", "inspect"] and item == "":
+					point = Game.station_point(station)
+			"cauldron":
+				if action in ["add", "collect", "clear", "inspect"]:
+					point = Game.station_point(station)
 	if point == null:
 		return _no("wrong_station")
 	var position: Vector2 = players[peer]["position"]
 	if position.distance_to(point) > Game.INTERACT_RADIUS + Game.INTERACT_SLACK:
 		return _no("too_far")
+	if not Game.motion_clear(position, point, 1.0):
+		return _no("blocked")
 	var seat := int(players[peer]["seat"])
+	var outcome := _no("unknown_command")
 	match action:
-		"take": return shop.take(seat, item)
-		"put": return shop.put(seat)
-		"prep": return shop.prep(seat)
-		"add": return shop.add(seat)
-		"bottle": return shop.bottle(seat)
-		"serve": return shop.serve(seat)
-	return _no("unknown_command")
+		"take": outcome = shop.take(seat, item, station)
+		"put": outcome = shop.put(seat)
+		"restock": outcome = shop.restock(seat, item, station)
+		"add": outcome = shop.add(seat)
+		"collect": outcome = shop.collect(seat)
+		"clear": outcome = shop.clear_cauldron(seat)
+		"serve": outcome = shop.serve(seat, int(item))
+		"talk": outcome = shop.talk(int(item), position)
+		"door": outcome = shop.door()
+		"inspect": outcome = {"ok": true, "reason": "", "value": {"message": "Press R to read the recipes" if station == "cauldron" else "An empty chest — bring an ingredient or potion to store"}}
+	if bool(outcome["ok"]):
+		shop.record_effect(action, station, seat, position, point, outcome["value"])
+	return outcome
 
 
 func _no(reason: String) -> Dictionary:

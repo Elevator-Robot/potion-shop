@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40" shape-rendering="crispEdges">
+<title>Cozy dwarf — walk_0</title>
+<rect x="8" y="36" width="7" height="4" fill="#392d46"/>
+<rect x="9" y="36" width="5" height="3" fill="#78564e"/>
+<rect x="9" y="36" width="3" height="1" fill="#ac7c61"/>
+<rect x="18" y="34" width="6" height="4" fill="#392d46"/>
+<rect x="19" y="34" width="4" height="3" fill="#78564e"/>
+<rect x="19" y="34" width="3" height="1" fill="#ac7c61"/>
+<rect x="4" y="24" width="5" height="6" fill="#392d46"/>
+<rect x="5" y="24" width="3" height="3" fill="#ba7c86"/>
+<rect x="5" y="24" width="3" height="1" fill="#e7a5a2"/>
+<rect x="5" y="27" width="3" height="3" fill="#cf9381"/>
+<rect x="5" y="27" width="2" height="2" fill="#ffdec0"/>
+<rect x="23" y="28" width="5" height="6" fill="#392d46"/>
+<rect x="24" y="28" width="3" height="3" fill="#ba7c86"/>
+<rect x="24" y="28" width="3" height="1" fill="#e7a5a2"/>
+<rect x="24" y="31" width="3" height="3" fill="#cf9381"/>
+<rect x="24" y="31" width="2" height="2" fill="#ffdec0"/>
+<g transform="translate(0 0)">
+<path d="M10 23h12v2h2v6h-2v5H9v-5H7v-6h3z" fill="#392d46"/>
+<path d="M10 24h11v2h2v4h-2v5H10v-5H8v-4h2z" fill="#784e66"/>
+<path d="M11 24h9v2h2v3h-2v5h-9v-5H9v-3h2z" fill="#ba7c86"/>
+<rect x="10" y="27" width="12" height="8" fill="#784e66"/>
+<rect x="11" y="28" width="10" height="6" fill="#ba7c86"/>
+<path d="M11 27h2v2h2v2h-2v-1h-2zM19 27h2v3h-2v1h-2v-2h2z" fill="#bfd093"/>
+<rect x="10" y="32" width="12" height="2" fill="#78564e"/>
+<rect x="15" y="31" width="2" height="4" fill="#53694e"/>
+<rect x="13" y="23" width="7" height="3" fill="#cf9381"/>
+<rect x="4" y="16" width="4" height="5" fill="#392d46"/>
+<rect x="24" y="16" width="4" height="5" fill="#392d46"/>
+<rect x="5" y="17" width="3" height="3" fill="#cf9381"/>
+<rect x="24" y="17" width="3" height="3" fill="#cf9381"/>
+<path d="M11 3h10v2h4v3h2v14h-3v3H8v-3H5V8h2V5h4z" fill="#392d46"/>
+<path d="M11 4h10v2h3v3h2v12h-3v3H9v-3H6V9h2V6h3z" fill="#825446"/>
+<path d="M10 9h13v3h2v9h-3v2H10v-2H7v-9h3z" fill="#be7d58"/>
+<rect x="10" y="14" width="1" height="7" fill="#e9b17a"/>
+<rect x="20" y="14" width="1" height="7" fill="#e9b17a"/>
+<path d="M15 12h2v6h-1v6h-2v-6h1z" fill="#825446"/>
+<rect x="13" y="20" width="6" height="5" fill="#825446"/>
+<rect x="14" y="20" width="4" height="5" fill="#be7d58"/>
+<rect x="14" y="22" width="2" height="1" fill="#e9b17a"/>
+<rect x="16" y="24" width="2" height="1" fill="#e9b17a"/>
+<rect x="14" y="25" width="4" height="1" fill="#e9be73"/>
+<path d="M5 12V8h2V5h4V3h11v2h4v3h1v4z" fill="#392d46"/>
+<path d="M7 11V8h2V6h4V4h8v2h3v2h1v3z" fill="#ba7c86"/>
+<rect x="6" y="10" width="20" height="3" fill="#784e66"/>
+<rect x="7" y="10" width="18" height="1" fill="#e7a5a2"/>
+<rect x="9" y="11" width="1" height="1" fill="#ba7c86"/>
+<rect x="13" y="11" width="1" height="1" fill="#ba7c86"/>
+<rect x="17" y="11" width="1" height="1" fill="#ba7c86"/>
+<rect x="21" y="11" width="1" height="1" fill="#ba7c86"/>
+<rect x="15" y="5" width="1" height="5" fill="#e7a5a2"/>
+</g>
+</svg>

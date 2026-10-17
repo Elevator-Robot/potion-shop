@@ -11,7 +11,7 @@ const CharacterAnimation = preload("res://client/character_animation.gd")
 const VIEW_DELAY := 0.1
 
 ## Where the carried item rides above their head, in screen space.
-const HELD_ABOVE := Vector2(0.0, -66.0)
+const HELD_ABOVE := Vector2(0.0, -78.0)
 
 ## The same authored animation sheets used by the local player.
 const CHARACTERS := {
@@ -32,7 +32,7 @@ var animation := CharacterAnimation.new()
 
 @onready var sprite: Sprite2D = $Sprite
 @onready var held: Node2D = $Held
-@onready var held_icon: Polygon2D = $Held/HeldIcon
+@onready var held_icon: Sprite2D = $Held/HeldIcon
 @onready var held_label: Label = $Held/HeldLabel
 
 
@@ -66,7 +66,7 @@ func _use_character(seat_number: int) -> void:
 	var art: Texture2D = CHARACTERS.get(seat_number, CHARACTERS[0])
 	sprite.texture = art
 	sprite.hframes = 4
-	sprite.vframes = 2
+	sprite.vframes = 6
 	sprite.frame = 0
 	animation.idle_durations = Vector4(1.2, 0.3, 0.12, 0.3)
 	_face_art()
@@ -86,8 +86,8 @@ func set_held(item: String) -> void:
 	held.visible = item != ""
 	if item == "":
 		return
-	held_icon.color = Game.item_color(item)
-	held_label.text = Game.item_label(item)
+	held_icon.set_item(item)
+	held_label.visible = false
 	_place_held()
 
 

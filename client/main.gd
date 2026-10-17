@@ -1,86 +1,68 @@
 extends Node2D
-## What each player runs: joins the match, draws the shop room, and shows every
-## player. Our own input moves only our own character; the authority checks the
-## pose we publish, and everyone else is drawn from the poses they publish.
-## Every shared fact - the customer queue, the shelves, the storage, the
-## cauldron, the coins, the reputation, the day - is the authority's Shop
-## document. This client only asks for things with Commands, and draws what
-## comes back.
-
+## Interactive shop view. The host owns objects, customers and inventory;
+## this client chooses a nearby target and renders accepted actions.
 const Game = preload("res://network/game.gd")
 const PlayerOwner = preload("res://client/player_owner.tscn")
 const PlayerObserver = preload("res://client/player_observer.tscn")
 const HUD = preload("res://client/hud.gd")
-const QueueView = preload("res://client/queue_view.gd")
+const ItemIcon = preload("res://client/item_icon.gd")
 
-## The station ids of the shared rules, and the nodes in this scene that draw
-## them, so the highlight can land on the right one.
-const STATION_NODES := {
-	"shelves": "IngredientShelves",
-	"storage": "Storage",
-	"prep": "PrepStation",
-	"cauldron": "CauldronStation",
-	"bottling": "BottlingStation",
-	"counter": "ServingCounter",
-}
-const LIT := Color(1.3, 1.3, 1.2, 1.0)
-const UNLIT := Color(1.0, 1.0, 1.0, 1.0)
-
-## Our own seat (0 or 1), read from the authoritative player roster.
 var seat := -1
-var entities: Node2D
-
-## The authority's latest Shop document, and our own clock reading when it
-## landed, so the countdowns animate here between snapshots.
 var shop := {}
 var _local_at := 0.0
-var _interact_hold := 0.0
-var _hold_locked := false
+var _last_effect := -1
 var _lit_station := ""
+var _last_customer := 0
 
 @onready var camera: Camera2D = $Camera2D
 @onready var hud: HUD = $HUD
-@onready var queue_view: QueueView = $Room/Queue/Customers
-@onready var cauldron_label: Label = $Room/Stations/CauldronStation/PotLabel
-
+@onready var entities: Node2D = $World/Entities
+@onready var customers: Node2D = $World/Customers
+@onready var props: Node2D = $World/Props
 
 func _ready() -> void:
 	_fit_camera()
 	get_viewport().size_changed.connect(_fit_camera)
-	entities = Node2D.new()
-	entities.name = "Entities"
-	add_child(entities)
 	Session.state_changed.connect(_sync_session)
 	Session.command_finished.connect(_command_finished)
 	Session.failed.connect(_session_failed)
-	# F6 on this scene is a useful solo development shortcut.
 	if not Session.active:
 		Session.solo()
 	_sync_session()
 	hud.clear_status()
 	print("POTIONSHOP_CLIENT_JOINED")
 
-
-func _process(delta: float) -> void:
-	_update_interaction(delta)
-	_update_queue()
-	_update_cauldron()
+func _process(_delta: float) -> void:
+	_update_interaction()
+	_update_customers()
 	if Input.is_action_just_pressed("ui_cancel"):
 		Session.close()
 		get_tree().change_scene_to_file("res://client/menu.tscn")
 
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_R:
+		hud.toggle_recipes()
+		get_viewport().set_input_as_handled()
+	elif event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_TAB:
+		var prop := props.get_node_or_null(_lit_station)
+		if prop != null:
+			prop.cycle_selection()
+		get_viewport().set_input_as_handled()
 
-## Frames the whole room on every client, from the live viewport size and the
-## shared room rect: both players are always visible, whatever the window is.
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		var player := _own_player()
+		if player != null and Session.active:
+			_send(_nearest_action(player.global_position))
+			get_viewport().set_input_as_handled()
+
 func _fit_camera() -> void:
 	var viewport := get_viewport_rect().size
 	if viewport.x <= 0.0 or viewport.y <= 0.0:
 		return
 	var frame := Game.CAMERA_RECT
-	var fit := minf(viewport.x / frame.size.x, viewport.y / frame.size.y)
-	camera.zoom = Vector2(fit, fit)
+	camera.zoom = Vector2.ONE * minf(viewport.x / frame.size.x, viewport.y / frame.size.y)
 	camera.position = frame.get_center()
-
 
 func _sync_session() -> void:
 	seat = Session.local_seat
@@ -100,65 +82,47 @@ func _sync_session() -> void:
 		node.apply_pose(pose, created)
 	_install_shop(Session.document)
 
-
 func _command_finished(result: Dictionary) -> void:
 	if not bool(result.get("ok", false)):
 		hud.flash_message(HUD.refuse_text(str(result.get("reason", "unknown_command"))))
-
+		if result.get("reason", "") == "wrong_order":
+			var customer := customers.get_node_or_null("Customer_%d" % _last_customer)
+			if customer != null:
+				customer.emphasize_request(true)
+	else:
+		var message := str((result.get("value", {}) as Dictionary).get("message", ""))
+		if message != "":
+			hud.flash_message(message)
 
 func _session_failed(message: String) -> void:
 	seat = -1
 	hud.set_status(message + " Press Esc for menu.")
 
-
-## ---------------------------------------------------------------------------
-## The Shop document: the authority's snapshot of every shared fact. Nothing
-## here is ever written back, and nothing here is ever guessed locally.
-## ---------------------------------------------------------------------------
-
 func _install_shop(document: Dictionary) -> void:
 	if document.is_empty():
 		return
-	var before := shop
 	shop = document
 	_local_at = Time.get_ticks_msec()
 	hud.set_shop(shop, _local_at)
+	$Environment.apply_shop(shop)
+	for prop in props.get_children():
+		prop.apply_shop(shop)
 	_sync_held()
-	if before.is_empty():
-		return
-	var gained := int(document.get("coins", 0)) - int(before.get("coins", 0))
-	if gained > 0:
-		hud.flash_serve(gained)
-		_float_text(Game.station_point("counter") - Vector2(0.0, 30.0), "+%d" % gained, Color(0.98, 0.86, 0.36, 1.0))
-	if _angry_count(document) > _angry_count(before):
-		hud.flash_timeout()
+	var effects: Array = shop.get("effects", [])
+	if _last_effect < 0:
+		_last_effect = int(effects[-1]["id"]) if not effects.is_empty() else 0
+	else:
+		for event in effects:
+			if int(event["id"]) > _last_effect:
+				_play_effect(event)
+				_last_effect = int(event["id"])
 
-
-func _angry_count(document: Dictionary) -> int:
-	var customers: Array = document.get("customers", [])
-	var angry := 0
-	for entry in customers:
-		var customer: Dictionary = entry
-		if bool(customer.get("angry", false)):
-			angry += 1
-	return angry
-
-
-## The carried item rides above each player's head on every client: the
-## snapshot says who is carrying what, so it never travels in a pose.
 func _sync_held() -> void:
 	var held: Dictionary = shop.get("held", {})
-	for node in _player_nodes():
-		node.call("set_held", str(held.get(str(int(node.get("seat"))), "")))
+	for node in entities.get_children():
+		node.set_held(str(held.get(str(int(node.get("seat"))), "")))
 
-
-## ---------------------------------------------------------------------------
-## Interaction: what the player is standing at, and which Command that means.
-## ---------------------------------------------------------------------------
-
-## Reads the interact action against whatever we are standing at. Chopping is a
-## hold of about a second; everything else fires the moment it is pressed.
-func _update_interaction(delta: float) -> void:
+func _update_interaction() -> void:
 	if seat < 0:
 		return
 	var me := _own_player()
@@ -168,235 +132,160 @@ func _update_interaction(delta: float) -> void:
 	var station := str(action.get("station", ""))
 	if station != _lit_station:
 		_lit_station = station
-		_highlight(station)
-	hud.set_prompt(str(action.get("label", "")))
-	if not Input.is_action_pressed(&"interact"):
-		_interact_hold = 0.0
-		_hold_locked = false
-		hud.set_hold(0.0)
-		return
-	if str(action.get("action", "")) == "prep":
-		if not _hold_locked:
-			_interact_hold += delta
-			if _interact_hold >= Game.PREP_HOLD_SECONDS:
-				_interact_hold = 0.0
-				_hold_locked = true
-				_send(action)
-		hud.set_hold(_interact_hold / Game.PREP_HOLD_SECONDS)
-		return
-	_interact_hold = 0.0
-	hud.set_hold(0.0)
-	if Input.is_action_just_pressed(&"interact"):
+		for prop in props.get_children():
+			prop.set_highlighted(prop.prop_id == station)
+		$Environment.highlight_door(station == "door")
+	hud.set_prompt(str(action.get("label", "Match the bottle your customer wants · R: recipes")))
+	if Input.is_action_just_pressed("interact"):
 		_send(action)
 
-
-## Flush the latest pose before an action on the same reliable RPC channel.
 func _send(action: Dictionary) -> void:
 	if action.is_empty():
 		return
+	_last_customer = int(action.get("item", "0")) if action.get("station", "") == "customer" else 0
 	var player := _own_player()
 	if player != null:
 		Session.send_motion(player.global_position, player.rotation)
 	Session.send_command(str(action.get("action", "")), str(action.get("station", "")), str(action.get("item", "")))
 
-
-## The station we are closest to, and what interact would do there. This uses
-## the shared constants, so the prompt matches what the authority will accept.
 func _nearest_action(at: Vector2) -> Dictionary:
 	var best := {}
-	var best_distance := Game.INTERACT_RADIUS
-	for station in Game.STATIONS:
-		var point := Game.station_point(station)
-		var distance := at.distance_to(point)
-		if distance > best_distance:
+	var nearest := Game.INTERACT_RADIUS
+	# A visible request bubble is a direct target, even when another customer is
+	# slightly closer. This makes giving the visually matched bottle intentional.
+	var mouse := get_global_mouse_position()
+	for customer in shop.get("customers", []):
+		var point: Vector2 = customer.get("position", Vector2.ZERO)
+		if customer.get("phase", "") == "leaving" or at.distance_to(point) > Game.INTERACT_RADIUS:
 			continue
-		var action := _action_at(station, "")
-		if action.is_empty():
+		if Rect2(point + Vector2(-21, -111), Vector2(42, 54)).has_point(mouse) or Rect2(point + Vector2(-18, -50), Vector2(36, 50)).has_point(mouse):
+			return _customer_action(customer)
+	for id in Game.FURNITURE:
+		var distance := at.distance_to(Game.station_point(id))
+		if distance <= nearest:
+			var action := _action_at(id)
+			if not action.is_empty():
+				best = action
+				nearest = distance
+				var prop := props.get_node_or_null(id)
+				if prop != null and prop.mouse_over_stock(get_global_mouse_position()):
+					return action
+	if at.distance_to(Game.DOOR_POINT) <= nearest:
+		nearest = at.distance_to(Game.DOOR_POINT)
+		best = _action("door", "door", "", "[E] Open / close the door")
+	for customer in shop.get("customers", []):
+		if customer.get("phase", "") == "leaving":
 			continue
-		best = action
-		best_distance = distance
-	for raw in Game.RAW_ITEMS:
-		var spot := Game.shelf_spot(raw)
-		var distance := at.distance_to(spot)
-		if distance > best_distance:
-			continue
-		var action := _action_at("shelves", raw)
-		if action.is_empty():
-			continue
-		best = action
-		best_distance = distance
+		var point: Vector2 = customer.get("position", Vector2.ZERO)
+		if at.distance_to(point) <= nearest:
+			nearest = at.distance_to(point)
+			best = _customer_action(customer)
 	return best
 
+func _customer_action(customer: Dictionary) -> Dictionary:
+	var serving := Game.is_potion(_held())
+	return _action("serve" if serving else "talk", "customer", str(customer["id"]), "[E / click] Offer your bottle" if serving else "[E / click] Ask about their order")
 
-## What a station offers us right now, {} when there is nothing to do there.
-func _action_at(station: String, item: String) -> Dictionary:
+func _action_at(id: String) -> Dictionary:
+	var data: Dictionary = Game.FURNITURE[id]
 	var mine := _held()
-	match station:
-		"shelves":
-			if mine != "":
-				return {}
-			var stock := _shelf_stock(item)
-			if stock <= 0:
-				return {}
-			return _action("take", station, item, "[E] Take %s (%d left)" % [Game.item_label(item), stock])
+	match data["kind"]:
+		"shelf":
+			var item: String = props.get_node(id).choose_item(get_global_mouse_position(), mine)
+			if mine == item:
+				return _action("restock", id, item, "[E / click] Place your item on the shelf")
+			if mine == "":
+				var stock := int(shop.get("shelf_stock", {}).get(id, {}).get(item, 0))
+				return _action("take", id, item, "Point at a sprite · E / click to take · Tab to cycle · ×%d" % stock)
 		"storage":
 			if mine != "":
-				return _action("put", station, "", "[E] Store %s" % Game.item_label(mine))
-			var stored := _storage()
-			if stored.is_empty():
-				return {}
-			return _action("take", station, "", "[E] Take %s back" % Game.item_label(str(stored[-1])))
-		"prep":
-			if not Game.is_raw(mine):
-				return {}
-			return _action("prep", station, "", "[E] Hold to chop %s" % Game.item_label(mine))
+				return _action("put", id, "", "[E / click] Store held item")
+			var stored: Array = shop.get("storage", [])
+			if not stored.is_empty():
+				return _action("take", id, "", "[E / click] Retrieve last stored item")
+			return _action("inspect", id, "", "[E] Open storage chest")
 		"cauldron":
-			if not Game.is_prepped(mine) or _brewing():
-				return {}
-			return _action("add", station, "", "[E] Add %s" % Game.item_label(mine))
-		"bottling":
-			var cauldron := _cauldron()
-			if mine != "" or not bool(cauldron.get("ready", false)):
-				return {}
-			return _action("bottle", station, "", "[E] Bottle the %s" % Game.item_label(str(cauldron.get("potion", ""))))
-		"counter":
-			if not Game.is_potion(mine):
-				return {}
-			var order := _front_order()
-			if order == "":
-				return {}
-			return _action("serve", station, "", "[E] Serve the %s" % Game.item_label(order))
+			var pot: Dictionary = shop.get("cauldron", {})
+			var potion := str(pot.get("potion", ""))
+			if bool(pot.get("ready", false)) and mine == "":
+				return _action("collect", id, "", "[E / click] Collect the finished bottle")
+			if potion != "":
+				var now := Time.get_ticks_msec()
+				var left := maxf(Game.seconds_left(float(pot.get("brew_end_msec", 0)), float(shop.get("now_msec", 0)), _local_at, now), 0.0)
+				return _action("inspect", id, "", "Brewing · %.1fs · R: visual recipes" % left)
+			if Game.is_raw(mine):
+				return _action("add", id, "", "[E / click] Add your ingredient")
+			var contents: Array = pot.get("contents", [])
+			if mine == "" and not contents.is_empty():
+				return _action("clear", id, "", "[E] Empty unfinished mix · R: visual recipes")
+			return _action("inspect", id, "", "[E] Inspect cauldron · R: recipes")
 	return {}
-
 
 func _action(verb: String, station: String, item: String, label: String) -> Dictionary:
 	return {"action": verb, "station": station, "item": item, "label": label}
 
+func _update_customers() -> void:
+	var entries: Array = shop.get("customers", [])
+	var remaining: Array = []
+	for entry in entries:
+		remaining.append(maxf(Game.seconds_left(float(entry.get("deadline_msec", 0)), float(shop.get("now_msec", 0)), _local_at, Time.get_ticks_msec()), 0.0))
+	customers.apply(entries, remaining)
 
-## Lights up the station we are standing at, so it is obvious where an action
-## is available.
-func _highlight(station: String) -> void:
-	for id in STATION_NODES:
-		var body := get_node_or_null("Room/Stations/%s/Body" % STATION_NODES[id]) as CanvasItem
-		if body == null:
-			continue
-		body.modulate = LIT if id == station else UNLIT
+func _play_effect(event: Dictionary) -> void:
+	var station := str(event["station"])
+	var prop := props.get_node_or_null(station)
+	if prop != null:
+		prop.interact()
+	var action := str(event["action"])
+	var item := str(event["item"])
+	var from: Vector2 = event["from"]
+	var to: Vector2 = event["to"]
+	if item != "":
+		var start := from - Vector2(0, 78)
+		var end: Vector2 = prop.item_position(item) if prop != null else to - Vector2(0, 65)
+		if action in ["take", "collect"]:
+			start = end
+			end = from - Vector2(0, 78)
+		var icon := ItemIcon.new()
+		add_child(icon)
+		icon.set_item(item)
+		icon.scale = Vector2.ONE
+		icon.z_index = 10
+		icon.position = start
+		var tween := create_tween()
+		tween.tween_property(icon, "position", end, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tween.parallel().tween_property(icon, "rotation", TAU, 0.35)
+		tween.tween_property(icon, "modulate:a", 0.0, 0.15)
+		tween.tween_callback(icon.queue_free)
+	if action == "serve":
+		var reward := int(event["reward"])
+		hud.flash_serve(reward)
+		_float_text(to - Vector2(0, 70), "+%d  ♥" % reward, Color(1, 0.84, 0.5))
+	elif action == "add":
+		_float_text(to - Vector2(0, 80), "plop!", Color(0.65, 0.95, 0.8))
+	elif action == "talk":
+		var customer := customers.get_node_or_null("Customer_%d" % int(event.get("customer", 0)))
+		if customer != null:
+			customer.emphasize_request(false)
 
-
-## A floating number at a world position, drifting up and fading out.
 func _float_text(at: Vector2, text: String, color: Color) -> void:
 	var label := Label.new()
 	label.text = text
-	label.size = Vector2(72.0, 22.0)
-	label.position = at - Vector2(36.0, 11.0)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.position = at
+	label.z_index = 10
 	label.add_theme_color_override("font_color", color)
-	label.add_theme_font_size_override("font_size", 16)
+	label.add_theme_constant_override("outline_size", 3)
 	add_child(label)
 	var tween := create_tween()
-	tween.tween_property(label, "position", label.position - Vector2(0.0, 30.0), 0.9)
+	tween.tween_property(label, "position", at - Vector2(0, 24), 0.9)
 	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.9)
 	tween.tween_callback(label.queue_free)
 
-
-## ---------------------------------------------------------------------------
-## Reading the snapshot. Every number is drawn with the local countdown, so the
-## bars and the clock stay smooth while the snapshot rate stays low.
-## ---------------------------------------------------------------------------
-
-func _update_queue() -> void:
-	var customers := _customers()
-	var remaining: Array = []
-	var now := Time.get_ticks_msec()
-	var server_now := float(shop.get("now_msec", 0.0))
-	for entry in customers:
-		var customer: Dictionary = entry
-		var left := Game.seconds_left(float(customer.get("deadline_msec", 0.0)), server_now, _local_at, now)
-		remaining.append(maxf(left, 0.0))
-	queue_view.apply(customers, remaining)
-
-
-## What is in the cauldron and how far the brew has got, written beside it.
-func _update_cauldron() -> void:
-	var cauldron := _cauldron()
-	var contents: Array = cauldron.get("contents", [])
-	var potion := str(cauldron.get("potion", ""))
-	if potion == "" and contents.is_empty():
-		cauldron_label.text = "Cauldron: empty"
-		return
-	var names: Array = []
-	for item in contents:
-		names.append(Game.item_label(Game.raw_of(str(item))))
-	var line := "Cauldron: %s" % ", ".join(names)
-	if potion == "":
-		cauldron_label.text = "%s ..." % line
-		return
-	if bool(cauldron.get("ready", false)):
-		cauldron_label.text = "%s -> %s ready!" % [line, Game.item_label(potion)]
-		return
-	var start := float(cauldron.get("brew_start_msec", 0.0))
-	var finish := float(cauldron.get("brew_end_msec", 0.0))
-	var span := maxf(finish - start, 0.001)
-	var left := Game.seconds_left(finish, float(shop.get("now_msec", 0.0)), _local_at, Time.get_ticks_msec())
-	cauldron_label.text = "%s -> brewing %s %d%%" % [line, Game.item_label(potion), int(clampf(1.0 - left / span, 0.0, 1.0) * 100.0)]
-
-
 func _held() -> String:
-	var held: Dictionary = shop.get("held", {})
-	return str(held.get(str(seat), ""))
+	return str((shop.get("held", {}) as Dictionary).get(str(seat), ""))
 
-
-func _shelf_stock(raw: String) -> int:
-	var shelves: Dictionary = shop.get("shelves", {})
-	return int(shelves.get(raw, 0))
-
-
-func _storage() -> Array:
-	var stored: Array = shop.get("storage", [])
-	return stored
-
-
-func _cauldron() -> Dictionary:
-	var cauldron: Dictionary = shop.get("cauldron", {})
-	return cauldron
-
-
-func _customers() -> Array:
-	var customers: Array = shop.get("customers", [])
-	return customers
-
-
-## The potion the customer being served is waiting for, "" when nobody is.
-func _front_order() -> String:
-	for entry in _customers():
-		var customer: Dictionary = entry
-		if not bool(customer.get("angry", false)):
-			return str(customer.get("order", ""))
-	return ""
-
-
-func _brewing() -> bool:
-	var cauldron := _cauldron()
-	return not str(cauldron.get("potion", "")).is_empty() or bool(cauldron.get("ready", false))
-
-
-## ---------------------------------------------------------------------------
-## The players this client draws.
-## ---------------------------------------------------------------------------
-
-func _player_nodes() -> Array:
-	if entities == null:
-		return []
-	var nodes: Array = []
-	for child in entities.get_children():
-		if child.has_method("set_held"):
-			nodes.append(child)
-	return nodes
-
-
-## Our own character: the one CharacterBody2D this client's archetype spawns.
 func _own_player() -> Node2D:
-	for node in _player_nodes():
+	for node in entities.get_children():
 		if node is CharacterBody2D:
 			return node
 	return null

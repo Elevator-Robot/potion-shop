@@ -5,8 +5,9 @@ Potion Shop is a shop-management game where you create and sell potions, serve c
 Run the shop solo or team up in two-player co-op. Gather ingredients, brew potions,
 and coordinate orders to keep up with customer demand. Choose Aaron (the blue-clad
 witch) or Renna (the purple-haired shopkeeper), then walk around with WASD/arrows.
-Renna is selected by default and has eight custom-drawn cozy
-pixel-art poses for idle, blinking, and walking.
+Renna is selected by default. Both players have 24 custom-drawn cozy pixel-art
+poses for front/rear/profile idle and walking; moving upward shows their backs,
+and moving sideways shows their profiles.
 
 ## Run in Godot
 
@@ -15,8 +16,21 @@ Choose **Play Solo**, **Host Co-op**, or **Join Co-op**. No Summer installation 
 account is needed. F6 on `client/main.tscn` starts a solo shop directly.
 
 - **Move:** WASD or arrow keys.
-- **Interact:** E or Space; hold to chop ingredients.
+- **Interact:** E, Space or left click at the nearby object/customer.
+- **Select shelf item:** point at its sprite, or Tab to cycle.
+- **Recipes:** R opens/closes the recipe book.
 - **Leave shop:** Esc.
+
+Customers show the bottle they want in a large visual bubble. Match its shape
+and color to the recipe book: six distinctive potions use twelve animated
+ingredients. Pick an ingredient sprite from a library shelf, add it to the
+cauldron, collect the finished bottle, and bring the matching bottle to a customer.
+Talk to customers to pause them briefly and emphasize their visual request.
+
+Assigned items can be returned to shelves; finished bottles can be stacked on
+the empty potion racks. Every shelf's stock is independent. Chests store and retrieve items
+from the shared storage supply. Doors, lids, jars, potions and brewing have visible
+interaction animations. There is no prep table, bottling station or service counter.
 
 For co-op on one machine, run two instances: host in one, join `127.0.0.1` in the
 other. On a LAN, join the host's LAN IP. Both use UDP port **24567** by default;

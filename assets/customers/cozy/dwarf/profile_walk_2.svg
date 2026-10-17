@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40" shape-rendering="crispEdges">
+<title>dwarf — profile_walk_2</title>
+<path d="M14 31h6v2l5 2h-4z" fill="#784e66"/>
+<rect x="21" y="34" width="7" height="4" fill="#392d46"/>
+<rect x="22" y="34" width="5" height="3" fill="#825446"/>
+<path d="M14 31h6v2l-6 4h-4z" fill="#784e66"/>
+<rect x="10" y="36" width="7" height="4" fill="#392d46"/>
+<rect x="11" y="36" width="5" height="3" fill="#78564e"/>
+<rect x="12" y="36" width="4" height="1" fill="#ac7c61"/>
+<rect x="11" y="26" width="4" height="5" fill="#392d46"/>
+<rect x="12" y="27" width="2" height="3" fill="#cf9381"/>
+<g transform="translate(0 0)">
+<path d="M13 23h9v3h2v8h-2v2H11v-3h-1v-7h3z" fill="#392d46"/>
+<path d="M14 24h7v3h2v6h-2v2H12v-3h-1v-5h3z" fill="#784e66"/>
+<path d="M15 25h6v3h1v6h-9v-6h2z" fill="#ba7c86"/>
+<rect x="19" y="26" width="2" height="6" fill="#e7a5a2"/>
+<rect x="20" y="28" width="3" height="7" fill="#53694e"/>
+<rect x="21" y="29" width="1" height="5" fill="#bfd093"/>
+<rect x="11" y="32" width="12" height="2" fill="#78564e"/>
+<rect x="21" y="32" width="2" height="2" fill="#e9be73"/>
+</g>
+<path d="M16 25h4v3l6 1v3h-4v-3l-6 0z" fill="#392d46"/>
+<path d="M17 26h2v2l6 0h-2z" fill="#ba7c86"/>
+<rect x="23" y="27" width="4" height="4" fill="#392d46"/>
+<rect x="24" y="27" width="2" height="3" fill="#f3c5a6"/>
+<rect x="24" y="27" width="2" height="1" fill="#ffdec0"/>
+<g transform="translate(0 0)">
+<path d="M12 3h9v2h3v4h2v7h3v4h-3v3h-3v3H13v-2H9v-3H6V10h2V6h4z" fill="#392d46"/>
+<path d="M12 4h9v2h2v4h2v10h-3v4h-8v-2H9v-2H7V11h2V7h3z" fill="#825446"/>
+<path d="M17 10h6v2h2v5h3v2h-3v3h-3v3h-6v-2h-2v-9h3z" fill="#cf9381"/>
+<path d="M18 11h4v2h2v5h3v1h-3v3h-3v2h-4v-2h-2v-7h3z" fill="#f3c5a6"/>
+<path d="M19 13h3v1h1v4h2v1h-2v2h-5v-4h1z" fill="#ffdec0"/>
+<rect x="21" y="16" width="3" height="4" fill="#49364e"/>
+<rect x="22" y="19" width="2" height="1" fill="#9874ac"/>
+<rect x="21" y="16" width="2" height="1" fill="#fff0cf"/>
+<rect x="19" y="20" width="4" height="2" fill="#ed9ca5"/>
+<rect x="24" y="22" width="1" height="1" fill="#cf9381"/>
+<rect x="23" y="23" width="1" height="1" fill="#cf9381"/>
+<path d="M9 11h9v2h-3v5h-3v3H9z" fill="#be7d58"/>
+<path d="M14 20h3v3h5v-2h3v4h2v3h-3v3h-6v-2h-3v-3h-2z" fill="#825446"/>
+<path d="M15 22h2v3h6v-2h1v3h1v1h-3v3h-3v-2h-3z" fill="#be7d58"/>
+<rect x="17" y="25" width="1" height="3" fill="#e9b17a"/>
+<rect x="22" y="26" width="1" height="2" fill="#e9b17a"/>
+<rect x="19" y="29" width="3" height="1" fill="#e9be73"/>
+<path d="M7 12V8h2V5h4V3h9v2h3v3h1v5z" fill="#392d46"/>
+<path d="M9 11V8h2V6h4V4h6v2h2v3h1v2z" fill="#ba7c86"/>
+<rect x="8" y="10" width="18" height="3" fill="#784e66"/>
+<rect x="9" y="10" width="16" height="1" fill="#e7a5a2"/>
+<rect x="10" y="11" width="1" height="1" fill="#ba7c86"/>
+<rect x="14" y="11" width="1" height="1" fill="#ba7c86"/>
+<rect x="18" y="11" width="1" height="1" fill="#ba7c86"/>
+<rect x="22" y="11" width="1" height="1" fill="#ba7c86"/>
+</g>
+</svg>

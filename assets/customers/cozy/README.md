@@ -18,9 +18,14 @@ large eyes, small boots, and 32×40 chibi proportions.
 
 ## Frames and integration
 
-Every character has four separately drawn **32×40** SVG/PNG idle poses: relaxed,
-inhale, blink, and settle. Their hands and accessories have separate follow-through
-while boots stay planted. The four poses are packed into each **128×40** strip.
+Every character has 24 separately drawn **32×40** SVG/PNG poses: front, rear and
+profile idle/walk sets of four frames each. Their hands and accessories
+have separate follow-through. Rear art shows hair, backs of helmets/hats,
+necklines, cape backs and apron ties rather than visible faces or beards.
+`*_idle.png` retains the original front idle strip for reference; `*_sheet.png`
+contains all poses in six rows. Profile drawings have a side silhouette, one
+visible eye and distinct near/far limbs. Right-profile frames are mirrored for
+leftward movement. Runtime textures include the skin variants below.
 They hold the relaxed pose longer and expose the blink only briefly rather than
 giving every pose the same duration. Customer ID offsets the cycle and selects
 the appearance.
@@ -28,6 +33,9 @@ the appearance.
 The game draws them at a 50-world-pixel canvas height with nearest filtering,
 leaving space between people and room for potion icons, labels and patience bars.
 Appearance is stable across queue changes and requires no new server state.
+Visuals persist by customer ID and follow the host's roaming paths. Customers
+enter through the shop door, browse the shelves and look around while waiting,
+then leave through the door. All views are used according to movement/facing.
 
 ## Fantasy skin colors
 
@@ -40,7 +48,9 @@ skin-color range.
 `skin_palettes.json` defines matching base, shadow, highlight and blush colors.
 The generator applies these only to the skin shapes (face, ears, hands), preserving
 clothing, hair, eyes and outlines. The game uses the `*_fantasy.png` atlases:
-**128×320**, four animation columns and eight palette rows, with 32×40 cells.
+**128×1920**, four columns and 48 rows of 32×40 cells. Each of eight palettes has
+six consecutive rows (front idle/walk, rear idle/walk, profile idle/walk). The
+frame index is `palette * 24 + direction_pose_frame`, with offsets 0/4/8/12/16/20.
 Customer ID selects both outfit and palette deterministically; each outfit
 eventually uses all eight palettes. Angry customers retain their skin color and
 show the exclamation mark and red patience bar instead of a whole-body red tint.

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40" shape-rendering="crispEdges">
+<rect x="14" y="17" width="3" height="20" fill="#3a716b" opacity="1"/>
+<path d="M15 18L9 10l3-7 5 3 1 10z" fill="#355578" opacity="1"/>
+<path d="M17 18l6-12 7 6-4 7z" fill="#355578" opacity="1"/>
+<path d="M15 19L4 12l-2 9 9 4z" fill="#355578" opacity="1"/>
+<path d="M17 20l11 2-1 8-8-3z" fill="#355578" opacity="1"/>
+<path d="M15 20l-7 7 5 7 5-8z" fill="#355578" opacity="1"/>
+<rect x="12" y="7" width="4" height="4" fill="#79c3df" opacity="1"/>
+<rect x="12" y="7" width="2" height="1" fill="#c9edf0" opacity="1"/>
+<rect x="22" y="12" width="4" height="4" fill="#79c3df" opacity="1"/>
+<rect x="22" y="12" width="2" height="1" fill="#c9edf0" opacity="1"/>
+<rect x="6" y="19" width="4" height="4" fill="#79c3df" opacity="1"/>
+<rect x="6" y="19" width="2" height="1" fill="#c9edf0" opacity="1"/>
+<rect x="22" y="25" width="4" height="4" fill="#79c3df" opacity="1"/>
+<rect x="22" y="25" width="2" height="1" fill="#c9edf0" opacity="1"/>
+<rect x="12" y="27" width="4" height="4" fill="#79c3df" opacity="1"/>
+<rect x="12" y="27" width="2" height="1" fill="#c9edf0" opacity="1"/>
+<ellipse cx="16" cy="19" rx="4" ry="4" fill="#ded38c" opacity="1"/>
+<rect x="15" y="17" width="2" height="2" fill="#fff0be" opacity="1"/>
+<rect x="15" y="30" width="2" height="5" fill="#8ebba0" opacity="1"/>
+</svg>

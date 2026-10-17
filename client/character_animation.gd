@@ -29,12 +29,20 @@ func apply(sprite: Sprite2D, body_rotation: float, height: float) -> void:
 	var horizontal := cos(body_rotation)
 	if absf(horizontal) > 0.25:
 		sprite.flip_h = horizontal < 0.0
-	var walking := walk_amount > 0.15
-	sprite.frame = 4 + int(_step / TAU * 4.0) % 4 if walking else _idle_frame()
+	sprite.frame = frame_index(body_rotation)
 	var frame_height := sprite.texture.get_size().y / sprite.vframes
 	sprite.scale = Vector2.ONE * height / frame_height
 	sprite.rotation = -body_rotation
 	sprite.position = Vector2(0.0, -height * 0.5).rotated(-body_rotation)
+
+
+func frame_index(facing: float) -> int:
+	# Any upward component (including diagonal movement) uses drawn rear art.
+	# Facing is retained by the player on release, preserving rear-facing idle.
+	var vertical := sin(facing)
+	var direction_offset := 8 if vertical < -0.1 else (16 if absf(vertical) <= 0.1 else 0)
+	var pose := 4 + int(_step / TAU * 4.0) % 4 if walk_amount > 0.15 else _idle_frame()
+	return direction_offset + pose
 
 
 func _idle_frame() -> int:
