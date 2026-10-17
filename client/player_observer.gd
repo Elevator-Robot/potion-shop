@@ -28,14 +28,12 @@ const ART_HEIGHT := 32.0
 ## character's feet stay on the player's spot however the body is turned.
 const ART_ABOVE := Vector2(0.0, -ART_HEIGHT * 0.5)
 
-var group: SummerNetworkStateGroup
 ## Their seat, so main.gd can look up what they are carrying in the snapshot.
 var seat := -1
 ## The item the authority says they are carrying, "" for empty hands. It comes
 ## from the Shop snapshot, not from the pose.
 var carrying := ""
 var _samples: Array = []    # [time, position, facing] per received pose
-var _offsets: Array = []    # recent arrival minus authority acceptance, seconds
 var _tinted := -1
 
 @onready var sprite: Sprite2D = $Sprite
@@ -44,13 +42,7 @@ var _tinted := -1
 @onready var held_label: Label = $Held/HeldLabel
 
 
-func bind(motion: SummerNetworkStateGroup) -> void:
-	group = motion
-	group.state_installed.connect(_on_installed)
-	_on_installed(group.get_state(), group.get_revision(), true)
-
-
-func _on_installed(state: Dictionary, _revision: int, reset: bool) -> void:
+func apply_pose(state: Dictionary, reset: bool) -> void:
 	if state.is_empty():
 		return
 	var pose := Game.pose_from(state)
@@ -61,7 +53,7 @@ func _on_installed(state: Dictionary, _revision: int, reset: bool) -> void:
 		_samples.clear()   # a spawn or a teleport is a cut, not a slide
 		global_position = position
 		rotation = facing
-	_samples.append([_pose_time(Time.get_ticks_usec() / 1000000.0), position, facing])
+	_samples.append([Time.get_ticks_usec() / 1000000.0, position, facing])
 	if _samples.size() > 20:
 		_samples.pop_front()
 
@@ -163,16 +155,3 @@ func _process(_delta: float) -> void:
 	var oldest: Vector2 = _samples[0][1]
 	global_position = oldest
 	_place()
-
-
-## Places a pose on the local timeline by when the authority accepted it, so
-## poses that arrive bunched together still play back evenly.
-func _pose_time(now: float) -> float:
-	var timing := group.get_timing()
-	if timing == null or timing.state_authority_usec < 0:
-		return now
-	var accepted := timing.state_authority_usec / 1000000.0
-	_offsets.append(now - accepted)
-	if _offsets.size() > 40:
-		_offsets.pop_front()
-	return minf(accepted + float(_offsets.min()), now)

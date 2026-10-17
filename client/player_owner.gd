@@ -24,7 +24,6 @@ const ART_HEIGHT := 32.0
 ## character's feet stay on the player's spot however the body is turned.
 const ART_ABOVE := Vector2(0.0, -ART_HEIGHT * 0.5)
 
-var group: SummerNetworkStateGroup
 var seat := -1
 var facing := Game.SPAWN_FACING
 ## The item the authority says we are carrying, "" for empty hands. It comes
@@ -41,21 +40,16 @@ var _tinted := -1
 @onready var held_label: Label = $Held/HeldLabel
 
 
-func bind(motion: SummerNetworkStateGroup) -> void:
-	group = motion
-	group.state_installed.connect(_on_installed)
-	_on_installed(group.get_state(), group.get_revision(), true)
+func _ready() -> void:
+	Session.corrected.connect(func(pose: Dictionary) -> void: apply_pose(pose, true))
 
 
-func _on_installed(state: Dictionary, _revision: int, reset: bool) -> void:
+func apply_pose(state: Dictionary, reset: bool) -> void:
 	if state.is_empty():
 		return
-	# Accepted poses are not echoed back to us (skip_writer_echo). A reset is
-	# the authority moving us: spawn, a teleport, or a pose it refused.
-	if _pose.is_empty():
-		_adopt(state)
-		return
-	if not reset:
+	# Ignore normal snapshot echoes of our own predicted movement. Only spawn
+	# and explicit authority corrections reset the local position.
+	if not reset and not _pose.is_empty():
 		return
 	_adopt(state)
 	global_position = _pose["position"]
@@ -112,7 +106,7 @@ func _face_art() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if group == null or not group.active:
+	if not Session.active or seat < 0:
 		return
 	var input := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
 	velocity = input * Game.WALK_SPEED
@@ -160,5 +154,5 @@ func _publish(delta: float) -> void:
 	_pose["facing"] = facing
 	if _pose == _sent:
 		return
-	group.submit(_pose)
+	Session.send_motion(global_position, facing)
 	_sent = _pose.duplicate()

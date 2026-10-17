@@ -2,12 +2,7 @@ extends RefCounted
 ## Shared by the client and the authority: ids, the shop room geometry and the
 ## network helpers. Client and shared code never load anything from authority/.
 
-const GAME_ID := "game_potion_shop"
-const QUEUE := &"potion_shop"
-const CMD := &"potion_shop.cmd"
-const MOTION := &"potion_shop.motion"
 const MAX_PLAYERS := 2
-const COMPOSITION := preload("res://network/composition.tres")
 
 ## Room geometry in pixels, shared so the client's floor drawing and the
 ## authority's bounds check cannot drift apart. The interior is 640x420; the
@@ -41,9 +36,6 @@ const TINT_P2 := Color(0.62, 0.42, 0.92, 1.0)
 ## Shop rules. The client and the authority both read every line below, so item
 ## ids, recipes, station positions and timings can never drift apart.
 ## ---------------------------------------------------------------------------
-
-## The authority-written Shop stream: one document every player renders.
-const SHOP := &"potion_shop.shop"
 
 ## Items. These cross JSON inside the snapshot and inside Commands, and a JSON
 ## round trip always hands back plain Strings, so the ids are Strings too.
@@ -147,43 +139,6 @@ const QUEUE_SLOTS := [
 ## How often the authority re-sends the Shop document even when nothing
 ## changed, so late joiners and a lossy network always catch up.
 const SHOP_HEARTBEAT := 0.25
-
-
-## Adds the World, the Entities root and the Spawner under `parent`. Both sides
-## pass their own player archetype; the composition is the same file.
-static func build_network(parent: Node, player: SummerEntityArchetype) -> SummerNetworkSpawner:
-	var world := SummerNetworkWorld.new()
-	world.name = "World"
-	parent.add_child(world)
-	# 2D: the player projections are CanvasItems, so their root is a Node2D.
-	var entities := Node2D.new()
-	entities.name = "Entities"
-	parent.add_child(entities)
-	var spawner := SummerNetworkSpawner.new()
-	spawner.name = "Spawner"
-	spawner.network_world_path = NodePath("../World")
-	spawner.entities_root_path = NodePath("../Entities")
-	spawner.archetypes = [player]
-	spawner.player_archetype = &"player"   # one entity per joined player
-	spawner.network_composition = COMPOSITION
-	parent.add_child(spawner)
-	return spawner
-
-
-## Commands and results travel as JSON bytes: a network String holds at most
-## 256 bytes.
-static func pack(document: Dictionary) -> Dictionary:
-	return {"b": JSON.stringify(document).to_utf8_buffer()}
-
-
-static func unpack(fields: Dictionary) -> Dictionary:
-	var parsed: Variant = JSON.parse_string((fields.get("b", PackedByteArray()) as PackedByteArray).get_string_from_utf8())
-	return parsed if parsed is Dictionary else {}
-
-
-## Pose groups are keyed by seat, so the stream needs at most MAX_PLAYERS keys.
-static func motion_key(seat: int) -> StringName:
-	return StringName("p%d" % seat)
 
 
 ## A seat's spawn point on the shop floor.

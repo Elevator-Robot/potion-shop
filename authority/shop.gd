@@ -8,7 +8,7 @@ extends RefCounted
 const Game = preload("res://network/game.gd")
 
 ## Who is carrying what, and the whole shop besides. Plain dictionaries only:
-## this document is JSON-packed on its way to the clients.
+## this document is copied into the snapshots sent to clients.
 var doc := {}
 var _next_customer := 1
 var _next_arrival_msec := 0

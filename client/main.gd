@@ -8,7 +8,8 @@ extends Node2D
 ## comes back.
 
 const Game = preload("res://network/game.gd")
-const PlayerArchetype = preload("res://client/player_archetype.tres")
+const PlayerOwner = preload("res://client/player_owner.tscn")
+const PlayerObserver = preload("res://client/player_observer.tscn")
 const HUD = preload("res://client/hud.gd")
 const QueueView = preload("res://client/queue_view.gd")
 
@@ -25,10 +26,8 @@ const STATION_NODES := {
 const LIT := Color(1.3, 1.3, 1.2, 1.0)
 const UNLIT := Color(1.0, 1.0, 1.0, 1.0)
 
-var spawner: SummerNetworkSpawner
-## Our own seat (0 or 1), read from the authority's answer to the join Command.
+## Our own seat (0 or 1), read from the authoritative player roster.
 var seat := -1
-var waiting := {}      # entity id -> pose group that arrived before its entity
 var entities: Node2D
 
 ## The authority's latest Shop document, and our own clock reading when it
@@ -48,35 +47,16 @@ var _lit_station := ""
 func _ready() -> void:
 	_fit_camera()
 	get_viewport().size_changed.connect(_fit_camera)
-	# A shop with nothing in it must never look like a broken one: say what we
-	# are waiting for until the authority has given us a seat.
-	hud.set_status("Joining the shop...")
-	spawner = Game.build_network(self, PlayerArchetype)
-	entities = get_node_or_null("Entities")
-	# Connect before joining, or the first values arrive unseen.
-	spawner.state_group_created.connect(_on_group_created)
-	spawner.entity_spawned.connect(_on_entity_spawned)
-	var initialized: SummerResult = await Summer.initialize(Game.GAME_ID).get_result_or_completed_signal()
-	if not initialized.ok:
-		push_error(initialized.message)
-		hud.set_status("Could not reach Summer: %s" % initialized.message)
-		return
-	var join := Summer.client.join(SummerJoinTarget.queue(Game.QUEUE))
-	# Hosted matchmaking may ask the player to accept a match.
-	join.acceptance_required.connect(func(proposal: SummerMatchmakingProposal) -> void: proposal.accept())
-	var joined: SummerResult = await join.get_result_or_completed_signal()
-	if not joined.ok:
-		push_error("join failed: %s %s" % [joined.code, joined.message])
-		hud.set_status("Could not join the shop: %s" % joined.message)
-		return
-	if not spawner.is_network_ready():
-		await spawner.network_ready
-	var entered := await command({"c": "join"})
-	if not entered.ok:
-		push_error("could not enter the shop: %s" % entered.error)
-		hud.set_status("Could not enter the shop: %s" % entered.error)
-		return
-	seat = int((entered.get("result", {}) as Dictionary).get("seat", -1))
+	entities = Node2D.new()
+	entities.name = "Entities"
+	add_child(entities)
+	Session.state_changed.connect(_sync_session)
+	Session.command_finished.connect(_command_finished)
+	Session.failed.connect(_session_failed)
+	# F6 on this scene is a useful solo development shortcut.
+	if not Session.active:
+		Session.solo()
+	_sync_session()
 	hud.clear_status()
 	print("POTIONSHOP_CLIENT_JOINED")
 
@@ -85,6 +65,9 @@ func _process(delta: float) -> void:
 	_update_interaction(delta)
 	_update_queue()
 	_update_cauldron()
+	if Input.is_action_just_pressed("ui_cancel"):
+		Session.close()
+		get_tree().change_scene_to_file("res://client/menu.tscn")
 
 
 ## Frames the whole room on every client, from the live viewport size and the
@@ -99,45 +82,33 @@ func _fit_camera() -> void:
 	camera.position = frame.get_center()
 
 
-## Sends one Command and waits for the authority's answer.
-func command(payload: Dictionary) -> Dictionary:
-	var admission := spawner.enqueue_command(Game.CMD, Game.pack(payload))
-	if not admission.is_enqueued():
-		return {"ok": false, "error": String(admission.get_code())}
-	var handle := admission.get_handle()
-	if not handle.is_terminal():
-		await handle.completed
-	if handle.get_outcome() == SummerNetworkCommandHandle.OUTCOME_ACCEPTED:
-		return {"ok": true, "error": "", "result": Game.unpack(handle.get_result())}
-	return {"ok": false, "error": String(handle.get_reason())}
+func _sync_session() -> void:
+	seat = Session.local_seat
+	for node in entities.get_children():
+		if not Session.players.has(int(str(node.name))):
+			entities.remove_child(node)
+			node.queue_free()
+	for peer in Session.players:
+		var pose: Dictionary = Session.players[peer]
+		var node := entities.get_node_or_null(str(peer))
+		var created := node == null
+		if created:
+			var scene: PackedScene = PlayerOwner if int(pose["seat"]) == seat else PlayerObserver
+			node = scene.instantiate()
+			node.name = str(peer)
+			entities.add_child(node)
+		node.apply_pose(pose, created)
+	_install_shop(Session.document)
 
 
-func _on_group_created(group: SummerNetworkStateGroup) -> void:
-	match group.get_stream_id():
-		Game.MOTION:
-			_attach_pose(group, int(group.get_state().get("entity", -1)))
-		Game.SHOP:
-			# The baseline is already installed when this fires; later changes
-			# arrive through state_installed.
-			_install_shop(group.get_state())
-			group.state_installed.connect(func(state: Dictionary, _revision: int, _reset: bool) -> void: _install_shop(state))
+func _command_finished(result: Dictionary) -> void:
+	if not bool(result.get("ok", false)):
+		hud.flash_message(HUD.refuse_text(str(result.get("reason", "unknown_command"))))
 
 
-## The pose group and the player's entity can arrive in either order.
-func _attach_pose(group: SummerNetworkStateGroup, entity_id: int) -> void:
-	var entity := spawner.get_entity(entity_id)
-	if entity == null or entity.root == null:
-		waiting[entity_id] = group
-		return
-	entity.root.bind(group)
-	_sync_held()
-
-
-func _on_entity_spawned(entity: SummerNetworkEntity) -> void:
-	print("POTIONSHOP_CLIENT_ENTITY entity=%d root=%s" % [entity.entity_id, "none" if entity.root == null else entity.root.get_class()])
-	if waiting.has(entity.entity_id):
-		_attach_pose(waiting[entity.entity_id], entity.entity_id)
-		waiting.erase(entity.entity_id)
+func _session_failed(message: String) -> void:
+	seat = -1
+	hud.set_status(message + " Press Esc for menu.")
 
 
 ## ---------------------------------------------------------------------------
@@ -145,10 +116,7 @@ func _on_entity_spawned(entity: SummerNetworkEntity) -> void:
 ## here is ever written back, and nothing here is ever guessed locally.
 ## ---------------------------------------------------------------------------
 
-func _install_shop(state: Dictionary) -> void:
-	if state.is_empty():
-		return
-	var document := Game.unpack(state)
+func _install_shop(document: Dictionary) -> void:
 	if document.is_empty():
 		return
 	var before := shop
@@ -222,18 +190,14 @@ func _update_interaction(delta: float) -> void:
 		_send(action)
 
 
-## Sends one shop action. The request id makes a retry safe, and a refusal only
-## ever reports why - it changes nothing here.
+## Flush the latest pose before an action on the same reliable RPC channel.
 func _send(action: Dictionary) -> void:
-	var payload := {
-		"c": str(action.get("action", "")),
-		"station": str(action.get("station", "")),
-		"item": str(action.get("item", "")),
-		"rid": "%s-%s-%d" % [str(action.get("action", "")), str(action.get("station", "")), Time.get_ticks_usec()],
-	}
-	var answer := await command(payload)
-	if not bool(answer.get("ok", false)):
-		hud.flash_message(HUD.refuse_text(str(answer.get("error", ""))))
+	if action.is_empty():
+		return
+	var player := _own_player()
+	if player != null:
+		Session.send_motion(player.global_position, player.rotation)
+	Session.send_command(str(action.get("action", "")), str(action.get("station", "")), str(action.get("item", "")))
 
 
 ## The station we are closest to, and what interact would do there. This uses
