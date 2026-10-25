@@ -2,6 +2,10 @@
 
 Validated engine baseline: Godot 4.7.2. Main scene: `client/menu.tscn`.
 
+The Web export is solo-only: the menu hides ENet controls and the session rejects
+host/join calls on Web. Native ENet behavior is unchanged. Publishing configuration
+and browser checks are documented in [publishing](../publishing.md).
+
 ## Session lifecycle
 
 `Session` is an autoload at the same RPC path on every peer. Solo uses an

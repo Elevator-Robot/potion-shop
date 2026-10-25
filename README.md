@@ -82,4 +82,11 @@ python3 tools/check.py --network
 ```
 
 These are headless functional checks. Visual quality and game feel are verified
-by playing in Godot. Platform exports and saved progression are not configured.
+by playing in Godot. Saved progression is not configured.
+
+## Web publishing
+
+The Web export supports solo play; native Godot builds retain ENet co-op. GitHub
+Actions checks and exports pull requests, then automatically publishes passing
+`main` builds to itch.io once the repository's destination and API secret are
+configured. See [publishing setup and local Web testing](docs/publishing.md).

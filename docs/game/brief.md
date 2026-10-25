@@ -79,7 +79,8 @@ feedback. Keep this loop lightweight. Use standard Godot, not Summer services.
 Current multiplayer is a two-player listen server over ENet, suitable for local
 or LAN play. Host departure ends the session. Rejoining gets a free seat and
 current shop state, not the previous player's inventory. There is no matchmaking,
-host migration, saved progression, or platform export configuration yet.
+host migration or saved progression. The Web export supports solo play only;
+native Godot play retains ENet co-op. See [publishing](../publishing.md).
 
 Ask before adding new mechanics or changing the intended art style. The existing
 code establishes current behavior; it does not authorize inventing a broader game.

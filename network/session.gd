@@ -11,6 +11,7 @@ signal corrected(pose: Dictionary)
 const Game = preload("res://network/game.gd")
 const Authority = preload("res://authority/main.gd")
 const DEFAULT_PORT := 24567
+const WEB_COOP_MESSAGE := "Browser play is solo. Co-op is available in the desktop version."
 
 var active := false
 ## Appearance choice persists when returning to the menu; the host validates it.
@@ -41,6 +42,9 @@ func solo() -> void:
 
 
 func host(port: int = DEFAULT_PORT) -> Error:
+	if OS.has_feature("web"):
+		_fail(WEB_COOP_MESSAGE)
+		return ERR_UNAVAILABLE
 	close()
 	var peer := ENetMultiplayerPeer.new()
 	var error := peer.create_server(port, Game.MAX_PLAYERS - 1)
@@ -56,6 +60,9 @@ func host(port: int = DEFAULT_PORT) -> Error:
 
 
 func join_host(address: String, port: int = DEFAULT_PORT) -> Error:
+	if OS.has_feature("web"):
+		_fail(WEB_COOP_MESSAGE)
+		return ERR_UNAVAILABLE
 	close()
 	var peer := ENetMultiplayerPeer.new()
 	var error := peer.create_client(address, port)

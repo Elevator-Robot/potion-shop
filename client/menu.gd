@@ -21,6 +21,11 @@ func _ready() -> void:
 	%Host.pressed.connect(func() -> void: Session.host(int(port.value)))
 	%Join.pressed.connect(_join)
 	%Cancel.pressed.connect(_cancel)
+	if OS.has_feature("web"):
+		# Browsers cannot use the native ENet/UDP co-op transport.
+		for control in [address, port, $Center/Content/PortLabel, %Host, %Join]:
+			control.hide()
+		status.text = Session.WEB_COOP_MESSAGE
 	%Solo.grab_focus.call_deferred()
 	# CLI shortcuts for running two editor-independent instances.
 	var args := OS.get_cmdline_user_args()
