@@ -134,8 +134,11 @@ jobs:
           curl --fail --location --retry 3 --output "$RUNNER_TEMP/butler.zip" \
             https://github.com/itchio/butler/releases/download/v15.32.0/butler-linux-amd64.zip
           echo "5db7b053fc9b578b86ffaf3520a12b952eb95c9225171cc5720dfbc9fe4574b3  $RUNNER_TEMP/butler.zip" | sha256sum --check -
-          unzip -q "$RUNNER_TEMP/butler.zip" -d "$RUNNER_TEMP/butler"
+          # Release ZIPs contain a linux-amd64/ directory; flatten it while
+          # keeping Butler and its shared libraries together.
+          unzip -j -q "$RUNNER_TEMP/butler.zip" -d "$RUNNER_TEMP/butler"
           chmod +x "$RUNNER_TEMP/butler/butler"
+          "$RUNNER_TEMP/butler/butler" -V
 
       - name: Upload to itch.io
         env:
