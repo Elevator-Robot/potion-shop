@@ -126,7 +126,8 @@ func _build_recipes() -> void:
 			row.add_child(tile)
 			index += 1
 		var arrow := Label.new()
-		arrow.text = "→"
+		# The bundled Web font lacks the native system fallback for this glyph.
+		arrow.text = ">" if OS.has_feature("web") else "→"
 		row.add_child(arrow)
 		var result := ItemTile.new()
 		result.setup(potion, Vector2(64, 64))

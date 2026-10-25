@@ -47,6 +47,9 @@ async function main() {
     await page.waitForTimeout(1500);
     await page.screenshot({ path: `${output}/05-restart-solo.png` });
 
+    // This existing game receipt confirms both input-driven scene transitions.
+    const launches = logs.filter(line => line.includes('POTIONSHOP_CLIENT_JOINED')).length;
+    assert.equal(launches, 2, 'Solo must start, return to the menu, and start again');
     assert.deepEqual(errors, [], 'Browser, network, or Godot runtime errors occurred');
     console.log('PASS: Web startup and repeated solo input smoke (screenshots saved for visual review)');
   } finally {
